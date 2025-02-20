@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, Cell
 } from 'recharts';
+import { saveAs } from 'file-saver';
+import { FaFilter } from "react-icons/fa";
+
+
 
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
@@ -33,6 +37,72 @@ const SalesDashboard = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [showDateDropdown, setShowDateDropdown] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedRegions, setSelectedRegions] = useState([]);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showRegionDropdown, setShowRegionDropdown] = useState(false);
+  const [filters, setFilters] = useState([]);
+
+
+
+  
+  
+
+
+
+  const toggleDateDropdown = () => {
+    setShowDateDropdown((prev) => !prev);
+  };
+  
+  const closeDropdown = (e) => {
+    if (!e.target.closest(".dropdown-box") && !e.target.closest(".date-dropdown")) {
+      setShowDateDropdown(false);
+    }
+  };
+  
+  useEffect(() => {
+    document.addEventListener("click", closeDropdown);
+    return () => {
+      document.removeEventListener("click", closeDropdown);
+    };
+  }, []);
+  
+  const toggleCategoryDropdown = () => {
+    setShowCategoryDropdown((prev) => !prev);
+  };
+  
+  const toggleRegionDropdown = () => {
+    setShowRegionDropdown((prev) => !prev);
+  };
+  
+  // Close dropdowns when clicking outside
+  const closeDropdowns = (e) => {
+    if (!e.target.closest(".dropdown-box") && !e.target.closest(".category-dropdown")) {
+      setShowCategoryDropdown(false);
+    }
+    if (!e.target.closest(".dropdown-box") && !e.target.closest(".region-dropdown")) {
+      setShowRegionDropdown(false);
+    }
+  };
+  
+  useEffect(() => {
+    document.addEventListener("click", closeDropdowns);
+    return () => {
+      document.removeEventListener("click", closeDropdowns);
+    };
+  }, []);
+  
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    
+    setSortConfig({ key, direction });
+  };
 
   const deleteEntry = (index) => {
     const newData = data.filter((_, i) => i !== index);
@@ -68,6 +138,43 @@ const SalesDashboard = () => {
     });
   };
 
+  const totalSales = data.reduce((sum, item) => sum + item.sales, 0);
+  const averageSales = (totalSales / data.length).toFixed(2);
+  const bestSellingProduct = data.length > 0 
+  ? data.reduce((max, item) => (item.sales > max.sales ? item : max), data[0]) 
+  : { product: "N/A", sales: 0 };
+
+
+  const lastPeriodSales = data.slice(-5).reduce((sum, item) => sum + item.sales, 0);
+  const salesTrend = totalSales > lastPeriodSales ? '⬆ Increasing' : '⬇ Decreasing';
+
+  const exportData = (format) => {
+    let exportContent;
+    let fileType;
+    let fileName;
+    const dataToExport = filteredData.length > 0 ? filteredData : data;
+    
+    if (format === 'json') {
+      exportContent = JSON.stringify(dataToExport, null, 2);
+      fileType = 'application/json';
+      fileName = 'sales_data.json';
+    } else {
+      const csvHeaders = "Product,Date,Sales,Inventory,Category,Region";
+      const csvRows = dataToExport.map(item => 
+        `${item.product},${item.date},${item.sales},${item.inventory},${item.category},${item.region}`
+      );
+      exportContent = [csvHeaders, ...csvRows].join("\n");
+      fileType = 'text/csv';
+      fileName = 'sales_data.csv';
+    }
+    
+    const blob = new Blob([exportContent], { type: fileType });
+    saveAs(blob, fileName);
+  };
+
+  
+  
+
   const handleEdit = (item) => {
     setFormData({
       product: item.product,
@@ -99,15 +206,74 @@ const SalesDashboard = () => {
     setThresholdValue(Number(e.target.value));
   };
 
-  const requestSort = (key) => {
-    let direction = 'ascending';
-    
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    
-    setSortConfig({ key, direction });
+
+  const handleDateChange = (e) => {
+    setDateRange((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
+
+
+  let filteredData = [...data];
+
+  // Apply existing manual filters
+  if (dateRange.start && dateRange.end) {
+    filteredData = filteredData.filter(
+      (item) => item.date >= dateRange.start && item.date <= dateRange.end
+    );
+  }
+  if (selectedCategories.length > 0) {
+    filteredData = filteredData.filter((item) => selectedCategories.includes(item.category));
+  }
+  if (selectedRegions.length > 0) {
+    filteredData = filteredData.filter((item) => selectedRegions.includes(item.region));
+  }
+  if (activeFilter !== "all") {
+    if (activeFilter === "highSales") {
+      filteredData = filteredData.filter((item) => item.sales >= thresholdValue);
+    } else if (activeFilter === "lowSales") {
+      filteredData = filteredData.filter((item) => item.sales < thresholdValue);
+    } else if (activeFilter === "lowInventory") {
+      filteredData = filteredData.filter((item) => item.inventory < 30);
+    }
+  }
+  if (searchTerm) {
+    filteredData = filteredData.filter(
+      (item) =>
+        item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.region.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+  
+  // Apply filters from react-visual-filter
+  // // filteredData = filteredData.filter((item) =>
+  // //   filters.every(({ key, value }) =>
+  // //     value ? item[key]?.toString().toLowerCase().includes(value.toString().toLowerCase()) : true
+  // //   )
+  // );
+  
+  
+ 
+
+const handleMultiSelectChange = (e, type) => {
+  const values = Array.from(e.target.selectedOptions, (option) => option.value);
+
+  if (type === "category") {
+    setSelectedCategories(values);
+  } else {
+    setSelectedRegions(values);
+  }
+};
+
+const handleAddFilter = (type, value) => {
+  setFilters((prevFilters) => [...prevFilters, { type, value }]);
+};
+
+const handleRemoveFilter = (index) => {
+  setFilters((prevFilters) => prevFilters.filter((_, i) => i !== index));
+};
 
   const lineData = data.map((entry, index) => ({
     name: `Day ${index + 1}`,
@@ -131,7 +297,6 @@ const SalesDashboard = () => {
   };
 
   const getRegionData = () => {
-    const regionData = [];
     const regionMap = {};
     
     data.forEach(item => {
@@ -141,25 +306,28 @@ const SalesDashboard = () => {
         regionMap[item.region] = item.sales;
       }
     });
-    
-    return regionData;
+  
+    return Object.keys(regionMap).map(region => ({
+      name: region,
+      value: regionMap[region]
+    }));
   };
+  
 
-  // Apply filtering
-  let filteredData = data;
+  let filteredData1 = data;
   
   if (activeFilter !== 'all') {
     if (activeFilter === 'highSales') {
-      filteredData = data.filter(item => item.sales >= thresholdValue);
+      filteredData1 = data.filter(item => item.sales >= thresholdValue);
     } else if (activeFilter === 'lowSales') {
-      filteredData = data.filter(item => item.sales < thresholdValue);
+      filteredData1 = data.filter(item => item.sales < thresholdValue);
     } else if (activeFilter === 'lowInventory') {
-      filteredData = data.filter(item => item.inventory < 30);
+      filteredData1 = data.filter(item => item.inventory < 30);
     }
   }
   
   if (searchTerm) {
-    filteredData = filteredData.filter(item => 
+    filteredData1 = filteredData1.filter(item => 
       item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.region.toLowerCase().includes(searchTerm.toLowerCase())
@@ -167,7 +335,7 @@ const SalesDashboard = () => {
   }
   
   if (sortConfig.key) {
-    filteredData.sort((a, b) => {
+    filteredData1.sort((a, b) => {
       if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
@@ -182,7 +350,6 @@ const SalesDashboard = () => {
     <div className="sales-dashboard">
       <h1>Sales Dashboard</h1>
       <div className='content-section'>
-     
         <div className="search-bar">
           <input 
             type="text" 
@@ -193,6 +360,7 @@ const SalesDashboard = () => {
         </div>
         
         <div className="filter-controls">
+        <div className="filter-buttons">
           <button 
             className={activeFilter === 'all' ? 'active' : ''} 
             onClick={() => handleFilterChange('all')}
@@ -217,7 +385,7 @@ const SalesDashboard = () => {
           >
             Low Inventory
           </button>
-          
+
           <label>
             Threshold: 
             <input 
@@ -227,6 +395,13 @@ const SalesDashboard = () => {
               min="0"
             />
           </label>
+          </div>
+
+          <div className="expt">
+            <button onClick={() => exportData('csv')}>Export CSV</button>
+            <button onClick={() => exportData('json')}>Export JSON</button>
+          </div>
+
         </div>
       </div>
       
@@ -334,30 +509,101 @@ const SalesDashboard = () => {
         )}
       </form>
 
+      {/*Summary Sec*/}
+      <div className="data-table-container summary-section visible-summary">
+          <h2>Summary Statistics</h2>
+          <p className='p1'><strong>Total Sales:</strong> ${totalSales} 
+            <span className={salesTrend.includes('⬆') ? 'positive-indicator' : 'negative-indicator'}>
+              {salesTrend}
+            </span>
+          </p>
+          <p className='p1'><strong>Average Sales:</strong> ${averageSales}</p>
+          <p className='p1'><strong>Best Selling Product:</strong> {bestSellingProduct.product} (${bestSellingProduct.sales})</p>
+      </div>
+
       {/* Data Table */}
+
       <div className="data-table-container">
-        <h2>Sales Data</h2>
+      <h2 className="sales-data-header">
+  Sales Data <FaFilter className="filter-icon" />
+</h2>
+
+
+        
+
+
+
         <table className="data-table">
           <thead>
             <tr>
               <th onClick={() => requestSort('product')}>
                 Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
               </th>
-              <th onClick={() => requestSort('date')}>
-                Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              <th className="date-dropdown" onClick={toggleDateDropdown}>
+                Date {sortConfig.key === "date" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                  {showDateDropdown && (
+                  <div className="dropdown-box" onClick={(e) => e.stopPropagation()}>
+                  <label>Start Date:</label>
+                  <input 
+                    type="date" 
+                    name="start" 
+                    value={dateRange.start} 
+                    onChange={handleDateChange} 
+                    onClick={(e) => { e.stopPropagation(); e.target.showPicker(); }} 
+                  />
+
+                  <label>End Date:</label>
+                  <input 
+                    type="date" 
+                    name="end" 
+                    value={dateRange.end} 
+                    onChange={handleDateChange} 
+                    onClick={(e) => { e.stopPropagation(); e.target.showPicker(); }}
+                  />
+                </div>
+                )}
               </th>
+
               <th onClick={() => requestSort('sales')}>
                 Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
               </th>
               <th onClick={() => requestSort('inventory')}>
                 Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
               </th>
-              <th onClick={() => requestSort('category')}>
-                Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              <th className="category-dropdown" onClick={toggleCategoryDropdown}>
+                Category {sortConfig.key === "category" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                
+                {showCategoryDropdown && (
+                  <div className="dropdown-box" onClick={(e) => e.stopPropagation()}>
+                    <label>Select Categories:</label>
+                    <select multiple value={selectedCategories} onChange={(e) => handleMultiSelectChange(e, "category")}>
+                      <option value="Electronics" className='p1'>Electronics</option>
+                      <option value="Furniture" className='p1'>Furniture</option>
+                      <option value="Appliances" className='p1'>Appliances</option>
+                      <option value="Clothing" className='p1'>Clothing</option>
+                      <option value="Books" className='p1'>Books</option>
+                    </select>
+                  </div>
+                )}
               </th>
-              <th onClick={() => requestSort('region')}>
-                Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+
+              <th className="region-dropdown" onClick={toggleRegionDropdown}>
+                Region {sortConfig.key === "region" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                
+                {showRegionDropdown && (
+                  <div className="dropdown-box" onClick={(e) => e.stopPropagation()}>
+                    <label>Select Regions:</label>
+                    <select multiple value={selectedRegions} onChange={(e) => handleMultiSelectChange(e, "region")}>
+                      <option value="North" className='p1'>North</option>
+                      <option value="South" className='p1'>South</option>
+                      <option value="East" className='p1'>East</option>
+                      <option value="West" className='p1'>West</option>
+                    </select>
+                  </div>
+                )}
               </th>
+
+
               <th>Actions</th>
             </tr>
           </thead>
@@ -436,8 +682,9 @@ const SalesDashboard = () => {
           </ResponsiveContainer>
         </div>
       </div>
-  
+
     </div>
+    
   );
 };
 
