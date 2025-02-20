@@ -4,6 +4,9 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Cell
 } from 'recharts';
+import SalesSummary from './SalesSummary';
+import DataExport from './DataExport';
+import SalesCharts from './SalesChart';
 
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
@@ -15,6 +18,18 @@ const initialData = [
   { id: 7, product: "Bluetooth Speaker", date: "2024-01-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
   { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
 ];
+
+interface SalesData {
+  id: number;
+  product: string;
+  date: string;
+  sales: number;
+  inventory: number;
+  category: string;
+  region: string;
+}
+
+
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
@@ -28,45 +43,65 @@ const SalesDashboard = () => {
     category: '',
     region: ''
   });
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: '',
+    selectedCategories: [] as string[],
+    selectedRegions: [] as string[],
+    minSales: '',
+    maxSales: '',
+  });
+
+
+
+  const totalSales = data.reduce((sum, item) => sum + item.sales, 0);
+  const avgSales = (data.length > 0 ? (totalSales / data.length).toFixed(2) : "0.00");
+  const bestSellingProduct = data.reduce((max, item) => (item.sales > max.sales ? item : max), data[0]);
+
   const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
 
+
   const deleteEntry = (id) => {
     setData(prevData => prevData.filter(item => item.id !== id));
   };
-  
+
+
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setErrors({}); // Clear errors if valid
+
     const salesValue = Number(formData.sales);
     const inventoryValue = Number(formData.inventory);
 
-    if (editingId) {
-      const updatedData = data.map(item =>
-        item.id === editingId ?
-          { ...formData, sales: salesValue, inventory: inventoryValue, id: editingId } :
-          item
-      );
-      setData(updatedData);
-      setEditingId(null);
-    } else {
-      const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
-      setData([...data, { ...formData, sales: salesValue, inventory: inventoryValue, id: newId }]);
-    }
-
-    setFormData({
-      product: '',
-      date: '',
-      sales: '',
-      inventory: '',
-      category: '',
-      region: ''
+    setData(prevData => {
+      if (editingId) {
+        return prevData.map(item =>
+          item.id === editingId
+            ? { ...formData, sales: salesValue, inventory: inventoryValue, id: editingId }
+            : item
+        );
+      }
+      const newId = prevData.length > 0 ? Math.max(...prevData.map(item => item.id)) + 1 : 1;
+      return [...prevData, { ...formData, sales: salesValue, inventory: inventoryValue, id: newId }];
     });
+
+    setEditingId(null);
+    setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
   };
+
 
   const handleEdit = (item) => {
     setFormData({
@@ -148,18 +183,23 @@ const SalesDashboard = () => {
   };
 
 
-  // Apply filtering
-  let filteredData = data;
+  let filteredData = data.filter((item) => {
+    const withinDateRange =
+      (!filters.startDate || item.date >= filters.startDate) &&
+      (!filters.endDate || item.date <= filters.endDate);
+    const categoryMatch =
+      filters.selectedCategories.length === 0 || filters.selectedCategories.includes(item.category);
+    const regionMatch =
+      filters.selectedRegions.length === 0 || filters.selectedRegions.includes(item.region);
+    const withinSalesRange =
+      (!filters.minSales || item.sales >= Number(filters.minSales)) &&
+      (!filters.maxSales || item.sales <= Number(filters.maxSales));
+    const searchMatch = item.product.toLowerCase().includes(searchTerm.toLowerCase());
 
-  if (activeFilter !== 'all') {
-    if (activeFilter === 'highSales') {
-      filteredData = data.filter(item => item.sales >= thresholdValue);
-    } else if (activeFilter === 'lowSales') {
-      filteredData = data.filter(item => item.sales < thresholdValue);
-    } else if (activeFilter === 'lowInventory') {
-      filteredData = data.filter(item => item.inventory < 30);
-    }
-  }
+    return withinDateRange && categoryMatch && regionMatch && withinSalesRange && searchMatch;
+  });
+
+
 
   if (searchTerm) {
     filteredData = filteredData.filter(item =>
@@ -181,6 +221,21 @@ const SalesDashboard = () => {
     });
   }
 
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.product.trim()) errors.product = "Product name is required.";
+    if (!formData.date) errors.date = "Date is required.";
+    if (new Date(formData.date) > new Date()) errors.date = "Future dates are not allowed.";
+    if (!formData.sales || Number(formData.sales) <= 0) errors.sales = "Sales must be a positive number.";
+    if (!formData.inventory || Number(formData.inventory) < 0) errors.inventory = "Inventory cannot be negative.";
+    if (!formData.category) errors.category = "Category is required.";
+    if (!formData.region) errors.region = "Region is required.";
+
+    return errors;
+  };
+
+
   return (
     <div className="sales-dashboard">
       <h1>Sales Dashboard</h1>
@@ -195,42 +250,108 @@ const SalesDashboard = () => {
           />
         </div>
 
-        <div className="filter-controls">
-          <button
-            className={activeFilter === 'all' ? 'active' : ''}
-            onClick={() => handleFilterChange('all')}
-          >
-            All Data
-          </button>
-          <button
-            className={activeFilter === 'highSales' ? 'active' : ''}
-            onClick={() => handleFilterChange('highSales')}
-          >
-            High Sales
-          </button>
-          <button
-            className={activeFilter === 'lowSales' ? 'active' : ''}
-            onClick={() => handleFilterChange('lowSales')}
-          >
-            Low Sales
-          </button>
-          <button
-            className={activeFilter === 'lowInventory' ? 'active' : ''}
-            onClick={() => handleFilterChange('lowInventory')}
-          >
-            Low Inventory
-          </button>
+        <div className="filter-controls bg-gray-900 p-4 rounded-lg border border-gray-700">
+          <h2 className="text-lg font-semibold text-white">Filters</h2>
 
-          <label>
-            Threshold:
-            <input
-              type="number"
-              value={thresholdValue}
-              onChange={handleThresholdChange}
-              min="0"
-            />
-          </label>
+          {/* ✅ Date Range Filters */}
+          <div className="flex space-x-4 my-2">
+            <label className="text-white">
+              Start Date:
+              <input
+                type="date"
+                className="ml-2 p-1 border rounded bg-gray-800 text-white"
+                value={filters.startDate}
+                onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+              />
+            </label>
+
+            <label className="text-white">
+              End Date:
+              <input
+                type="date"
+                className="ml-2 p-1 border rounded bg-gray-800 text-white"
+                value={filters.endDate}
+                onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+              />
+            </label>
+          </div>
+
+          {/* ✅ Min & Max Sales Filtering */}
+          <div className="flex space-x-4 my-2">
+            <label className="text-white">
+              Min Sales ($):
+              <input
+                type="number"
+                className="ml-2 p-1 border rounded bg-gray-800 text-white"
+                placeholder="0"
+                value={filters.minSales}
+                onChange={(e) => setFilters((prev) => ({ ...prev, minSales: e.target.value }))}
+              />
+            </label>
+
+            <label className="text-white">
+              Max Sales ($):
+              <input
+                type="number"
+                className="ml-2 p-1 border rounded bg-gray-800 text-white"
+                placeholder="Unlimited"
+                value={filters.maxSales}
+                onChange={(e) => setFilters((prev) => ({ ...prev, maxSales: e.target.value }))}
+              />
+            </label>
+          </div>
+
+          {/* ✅ Category Multi-Select */}
+          <div className="my-2">
+            <h3 className="text-white text-sm font-bold">Filter by Category:</h3>
+            <div className="flex flex-wrap gap-2">
+              {["Electronics", "Furniture", "Appliances"].map((category) => (
+                <label key={category} className="text-white flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.selectedCategories.includes(category)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        selectedCategories: prev.selectedCategories.includes(category)
+                          ? prev.selectedCategories.filter((c) => c !== category)
+                          : [...prev.selectedCategories, category],
+                      }))
+                    }
+                    className="w-4 h-4"
+                  />
+                  <span>{category}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* ✅ Region Multi-Select */}
+          <div className="my-2">
+            <h3 className="text-white text-sm font-bold">Filter by Region:</h3>
+            <div className="flex flex-wrap gap-2">
+              {["North", "South", "East", "West"].map((region) => (
+                <label key={region} className="text-white flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={filters.selectedRegions.includes(region)}
+                    onChange={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        selectedRegions: prev.selectedRegions.includes(region)
+                          ? prev.selectedRegions.filter((r) => r !== region)
+                          : [...prev.selectedRegions, region],
+                      }))
+                    }
+                    className="w-4 h-4"
+                  />
+                  <span>{region}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
+
       </div>
 
       <form onSubmit={handleSubmit} className="data-form">
@@ -414,7 +535,7 @@ const SalesDashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-
+{/* 
         <div className="chart-container">
           <h3>Sales by Region</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -436,8 +557,24 @@ const SalesDashboard = () => {
               <Legend />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
       </div>
+      {/* ✅ Use SalesSummary Component */}
+
+
+      =
+
+      {/* ✅ Sales Charts Component */}
+      <SalesCharts data={data} />
+
+      <SalesSummary
+        totalSales={totalSales}
+        avgSales={avgSales}
+        bestSellingProduct={bestSellingProduct}
+      />
+
+      {/* ✅ Data Export Component */}
+      <DataExport data={data} />
 
     </div>
   );
