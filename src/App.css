@@ -1,22 +1,45 @@
-/* App.css */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+:root {
+  --color-border: #424242;
+  --color-bg: #ffffff;
+}
+
+* {
   margin: 0;
   padding: 0;
-  background-color: #f5f7fa;
+  box-sizing: border-box;
+  list-style: none;
+  text-decoration: none;
 }
 
-.App {
-  width: 100vw;
-  margin: 0 auto;
-  padding: 20px;
+body {
+  position: relative;
+  background: linear-gradient(
+      to bottom left,
+      #f0f4f8 30%,
+      #d9e2ec 50%,
+      #b7c9d9 80%,
+      #a1b3c4
+    ),
+    radial-gradient(circle, #e1e8ed, #a1b3c4 70%);
+  background-blend-mode: multiply;
+  font-size: 1.2rem;
+  color: hsla(180, 7%, 75%, 0.9);
+  overflow-x: hidden;
 }
-
-
 
 /* Sales Dashboard Styling */
+
+.export-button-container {
+  display: flex;
+  justify-content: center;
+  button {
+    background: #3498db;
+    color: white;
+    margin: 0 40px;
+  }
+}
+
 .sales-dashboard h1 {
-  margin-bottom: 30px;
   color: #2c3e50;
   text-align: center;
 }
@@ -28,12 +51,13 @@ body {
   gap: 20px;
   margin-bottom: 30px;
   padding: 15px;
-  background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-bar {
+  width: 96vw;
+  margin: 25px auto;
   flex: 1;
 }
 
@@ -41,17 +65,18 @@ body {
   width: 100%;
   padding: 10px;
   border: 1px solid #dcdfe6;
-  background-color: white;
   border-radius: 4px;
   font-size: 14px;
-  color:#333
+  color: #333;
 }
 
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 30px;
   align-items: center;
+  justify-content: center;
+  padding: 0 25px;
 }
 
 .filter-controls button {
@@ -66,7 +91,6 @@ body {
 
 .filter-controls button.active {
   background-color: #3498db;
-  color: white;
   border-color: #2980b9;
 }
 
@@ -80,15 +104,13 @@ body {
 .filter-controls input[type="number"] {
   width: 80px;
   padding: 8px;
-  background-color: white;
-  border: 1px solid #dcdfe6;
+  border: 1px solid #dce6dc;
   border-radius: 4px;
   color: #333;
 }
 
 /* Data Form */
 .data-form {
-  background-color: #ffffff;
   padding: 20px;
   margin-bottom: 30px;
   border-radius: 8px;
@@ -125,7 +147,15 @@ body {
   width: 100%;
   padding: 10px;
   border: 1px solid #dcdfe6;
-  background-color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #333;
+}
+
+.content-section select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dcdfe6;
   border-radius: 4px;
   font-size: 14px;
   color: #333;
@@ -157,7 +187,6 @@ body {
 
 /* Data Table */
 .data-table-container {
-  background-color: #ffffff;
   padding: 20px;
   margin-bottom: 30px;
   border-radius: 8px;
@@ -177,7 +206,6 @@ body {
 }
 
 .data-table th {
-  background-color: #f5f7fa;
   padding: 12px;
   text-align: left;
   font-weight: 600;
@@ -187,13 +215,9 @@ body {
   user-select: none;
 }
 
-.data-table th:hover {
-  background-color: #e9ecef;
-}
-
 .data-table td {
   padding: 12px;
-  color:#333;
+  color: #333;
   border-bottom: 1px solid #ebeef5;
 }
 
@@ -234,7 +258,6 @@ body {
 
 /* Charts Section */
 .charts-section {
-  background-color: #ffffff;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -262,17 +285,115 @@ body {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .form-group {
     width: 100%;
   }
-  
+
   .controls-section {
     flex-direction: column;
   }
-  
+
   .filter-controls {
     width: 100%;
     justify-content: space-between;
   }
+}
+
+.sales-dashboard {
+  margin: 30px;
+}
+
+.summary-section {
+  color: black;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.App{
+  margin-top:100px;
+  height:90vh;
+}
+.metric {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.increase {
+  color: green;
+}
+
+.decrease {
+  color: red;
+}
+
+.no-change {
+  color: gray;
+}
+
+.nav-container {
+  color: white;
+  height: 80px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  padding-left: 32px;
+  padding-right: 16px;
+  background-color: rgba(0, 0, 0);
+  backdrop-filter: blur(0);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #1a1a1a;
+  justify-content: space-between;
+  color: white;
+
+  .nav-header {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  p {
+    font-size: 2.25rem;
+    font-weight: 700;
+  }
+  @media (max-width: 1024px) {
+    /* Assuming lg breakpoint is 1024px */
+    p {
+      font-size: 3vh; /* max-lg:text-[3vh] */
+    }
+  }
+}
+
+.nav-link {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  ul{
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Assuming md breakpoint is 768px */
+  .nav-link {
+    display: block; /* md:block */
+  }
+}
+
+.container{
+  margin-top: 100px;
 }
