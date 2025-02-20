@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useCallback } from 'react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  XAxis,YAxis,CartesianGrid,Tooltip, Legend,
   ResponsiveContainer, Cell, ComposedChart, Area
 } from 'recharts';
 import {
@@ -237,6 +237,7 @@ const SalesDashboard = () => {
     name: `Day ${index + 1}`,
     value: entry.sales
   }));
+
 
   const getCategoryData = () => {
     const categoryMap: { [key: string]: number } = {};
@@ -547,7 +548,7 @@ const SalesDashboard = () => {
                 selectsEnd
                 startDate={startDate}
                 endDate={endDate}
-                minDate={startDate}
+                minDate={startDate ?? undefined}
                 placeholderText="End Date"
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
@@ -769,11 +770,18 @@ const SalesDashboard = () => {
             </div>
           </h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData}>
+            <LineChart 
+              data={lineData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="name"
                 tick={{ fill: '#666' }}
+                interval={0}
+                angle={-45}
+                textAnchor="end"
+                height={60}
               />
               <YAxis
                 tick={{ fill: '#666' }}
