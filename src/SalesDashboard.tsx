@@ -11,6 +11,7 @@ import {
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Select from 'react-select';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-03-12", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
@@ -49,20 +50,91 @@ interface SummaryStats {
   salesChange: number;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: {
+    name: string;
+    value: number;
+    color: string;
+    dataKey: string;
+  }[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-4 border rounded shadow">
         <p className="font-medium">{`Date: ${label}`}</p>
-        {payload.map((pld: any, index: number) => (
-          <p key={index} style={{ color: pld.color }}>
-            {`${pld.name}: ${pld.value.toLocaleString()}`}
+        {payload.map((pld, index) => (
+          <p key={`tooltip-${index}`} style={{ color: pld.color }}>
+            {`${pld.name}: $${pld.value.toLocaleString()}`}
           </p>
         ))}
       </div>
     );
   }
   return null;
+};
+
+interface ValidationError {
+  field: string;
+  message: string;
+}
+
+interface FormData {
+  product: string;
+  date: string;
+  sales: string;
+  inventory: string;
+  category: string;
+  region: string;
+}
+
+const validateFormData = (formData: FormData, editingId: number | null, existingData: typeof initialData): ValidationError[] => {
+  const errors: ValidationError[] = [];
+  
+  if (!formData.product.trim()) {
+    errors.push({ field: 'product', message: 'Product name is required' });
+  }
+  
+  if (!formData.date) {
+    errors.push({ field: 'date', message: 'Date is required' });
+  } else {
+    const dateValue = new Date(formData.date);
+    if (isNaN(dateValue.getTime())) {
+      errors.push({ field: 'date', message: 'Invalid date format' });
+    }
+  }
+  
+  const salesValue = Number(formData.sales);
+  if (isNaN(salesValue) || salesValue < 0) {
+    errors.push({ field: 'sales', message: 'Sales must be a positive number' });
+  }
+  
+  const inventoryValue = Number(formData.inventory);
+  if (isNaN(inventoryValue) || inventoryValue < 0) {
+    errors.push({ field: 'inventory', message: 'Inventory must be a positive number' });
+  }
+  
+  if (!formData.category) {
+    errors.push({ field: 'category', message: 'Category is required' });
+  }
+  
+  if (!formData.region) {
+    errors.push({ field: 'region', message: 'Region is required' });
+  }
+  
+  if (!editingId && formData.product.trim()) {
+    const isDuplicate = existingData.some(item => 
+      item.product.toLowerCase() === formData.product.toLowerCase()
+    );
+    if (isDuplicate) {
+      errors.push({ field: 'product', message: 'Product name already exists' });
+    }
+  }
+  
+  return errors;
 };
 
 const SalesDashboard = () => {
@@ -80,10 +152,12 @@ const SalesDashboard = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string | null, direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<{ value: string; label: string }[]>([]);
-  const [selectedRegions, setSelectedRegions] = useState<{ value: string; label: string }[]>([]);
+  const [dateRange, setDateRange] = useState<{start: Date | null; end: Date | null}>({
+    start: null,
+    end: null
+  });
+  const [selectedCategories, setSelectedCategories] = useState<Array<{value: string; label: string}>>([]);
+  const [selectedRegions, setSelectedRegions] = useState<Array<{value: string; label: string}>>([]);
 
   const calculateSummaryStats = useCallback((): SummaryStats => {
     const totalSales = data.reduce((sum, item) => sum + item.sales, 0);
@@ -161,14 +235,7 @@ const SalesDashboard = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterChange = (filter: string) => {
-    setActiveFilter(filter);
-  };
-
-  const handleThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setThresholdValue(Number(e.target.value));
-  };
-
+ 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -178,6 +245,13 @@ const SalesDashboard = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const errors = validateFormData(formData, editingId, data);
+
+    if (errors.length > 0) {
+      console.error('Form validation errors:', errors);
+      return;
+    }
 
     const salesValue = Number(formData.sales);
     const inventoryValue = Number(formData.inventory);
@@ -217,8 +291,8 @@ const SalesDashboard = () => {
     setEditingId(item.id);
   };
 
-  const deleteEntry = (index: number) => {
-    const newData = data.filter((_, i) => i !== index);
+  const deleteEntry = (id: number) => {
+    const newData = data.filter(item => item.id !== id);
     setData(newData);
   };
 
@@ -329,61 +403,66 @@ const SalesDashboard = () => {
     return trends;
   };
 
-  let filteredData = [...data];
-
-  if (activeFilter !== 'all') {
-    if (activeFilter === 'highSales') {
-      filteredData = filteredData.filter(item => item.sales >= thresholdValue);
-    } else if (activeFilter === 'lowSales') {
-      filteredData = filteredData.filter(item => item.sales < thresholdValue);
-    } else if (activeFilter === 'lowInventory') {
-      filteredData = filteredData.filter(item => item.inventory < 30);
+  const getFilteredAndSortedData = useCallback(() => {
+    let result = [...data];
+    
+    if (searchTerm) {
+      result = result.filter(item => 
+        item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.region.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
-  }
-
-  if (searchTerm) {
-    filteredData = filteredData.filter(item =>
-      item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.region.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
-
-  if (startDate && endDate) {
-    filteredData = filteredData.filter(item => {
-      const itemDate = new Date(item.date);
-      itemDate.setHours(0, 0, 0, 0);
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      return itemDate >= start && itemDate <= end;
-    });
-  }
-
-  if (selectedCategories.length > 0) {
-    filteredData = filteredData.filter(item =>
-      selectedCategories.some(cat => cat.value === item.category)
-    );
-  }
-
-  if (selectedRegions.length > 0) {
-    filteredData = filteredData.filter(item =>
-      selectedRegions.some(region => region.value === item.region)
-    );
-  }
-
-  if (sortConfig.key) {
-    filteredData.sort((a, b) => {
-      if (a[sortConfig.key as keyof typeof a] < b[sortConfig.key as keyof typeof b]) {
-        return sortConfig.direction === 'ascending' ? -1 : 1;
+    
+    // Date range filter
+    if (dateRange.start && dateRange.end) {
+      result = result.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate >= dateRange.start! && itemDate <= dateRange.end!;
+      });
+    }
+    
+    // Category filter
+    if (selectedCategories.length > 0) {
+      result = result.filter(item =>
+        selectedCategories.some(cat => cat.value === item.category)
+      );
+    }
+    
+    // Region filter
+    if (selectedRegions.length > 0) {
+      result = result.filter(item =>
+        selectedRegions.some(region => region.value === item.region)
+      );
+    }
+    
+    // Existing filters
+    if (activeFilter !== 'all') {
+      if (activeFilter === 'highSales') {
+        result = result.filter(item => item.sales >= thresholdValue);
+      } else if (activeFilter === 'lowSales') {
+        result = result.filter(item => item.sales < thresholdValue);
+      } else if (activeFilter === 'lowInventory') {
+        result = result.filter(item => item.inventory < 30);
       }
-      if (a[sortConfig.key as keyof typeof a] > b[sortConfig.key as keyof typeof b]) {
-        return sortConfig.direction === 'ascending' ? 1 : -1;
-      }
-      return 0;
-    });
-  }
+    }
+    
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        if (a[sortConfig.key as keyof typeof a] < b[sortConfig.key as keyof typeof b]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key as keyof typeof a] > b[sortConfig.key as keyof typeof b]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    return result;
+  }, [data, dateRange, selectedCategories, selectedRegions, activeFilter, thresholdValue, searchTerm, sortConfig]);
+
+  let filteredData = getFilteredAndSortedData();
 
   const stats = calculateSummaryStats();
 
@@ -391,8 +470,7 @@ const SalesDashboard = () => {
     { value: 'Electronics', label: 'Electronics' },
     { value: 'Furniture', label: 'Furniture' },
     { value: 'Appliances', label: 'Appliances' },
-    { value: 'Clothing', label: 'Clothing' },
-    { value: 'Books', label: 'Books' }
+    { value: 'Clothing', label: 'Clothing' }
   ];
 
   const regionOptions = [
@@ -474,115 +552,79 @@ const SalesDashboard = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8 mx-6">
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search products, categories, regions..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-4 items-center">
-          <button
-            className={`px-4 py-2 rounded-md transition-colors ${activeFilter === 'all'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            onClick={() => handleFilterChange('all')}
-          >
-            All Data
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md transition-colors ${activeFilter === 'highSales'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            onClick={() => handleFilterChange('highSales')}
-          >
-            High Sales
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md transition-colors ${activeFilter === 'lowSales'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            onClick={() => handleFilterChange('lowSales')}
-          >
-            Low Sales
-          </button>
-          <button
-            className={`px-4 py-2 rounded-md transition-colors ${activeFilter === 'lowInventory'
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            onClick={() => handleFilterChange('lowInventory')}
-          >
-            Low Inventory
-          </button>
-
-          <label className="flex items-center gap-2">
-            <span className="text-gray-700">Threshold:</span>
-            <input
-              type="number"
-              value={thresholdValue}
-              onChange={handleThresholdChange}
-              min="0"
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </label>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6 mx-6">
+        <h3 className="text-lg font-medium mb-4">Advanced Filters</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search products, categories, regions..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
             <div className="flex gap-2">
               <DatePicker
-                selected={startDate}
-                onChange={(date: Date | null) => setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
+                selected={dateRange.start}
+                onChange={(date: Date | null) => setDateRange(prev => ({ ...prev, start: date }))}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
                 placeholderText="Start Date"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <DatePicker
-                selected={endDate}
-                onChange={(date: Date | null) => setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate ?? undefined}
+                selected={dateRange.end}
+                onChange={(date: Date | null) => setDateRange(prev => ({ ...prev, end: date }))}
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
                 placeholderText="End Date"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
-
+          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
             <Select
-              options={categoryOptions}
               isMulti
+              options={categoryOptions}
               value={selectedCategories}
-              onChange={(selected) => setSelectedCategories(selected as { value: string; label: string }[])}
-              className="basic-multi-select"
-              classNamePrefix="select"
+              onChange={(selected) => setSelectedCategories(selected as typeof selectedCategories)}
+              className="text-sm"
             />
           </div>
-
+          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Regions</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Regions</label>
             <Select
-              options={regionOptions}
               isMulti
+              options={regionOptions}
               value={selectedRegions}
-              onChange={(selected) => setSelectedRegions(selected as { value: string; label: string }[])}
-              className="basic-multi-select"
-              classNamePrefix="select"
+              onChange={(selected) => setSelectedRegions(selected as typeof selectedRegions)}
+              className="text-sm"
             />
+          </div>
+          
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setDateRange({ start: null, end: null });
+                setSelectedCategories([]);
+                setSelectedRegions([]);
+              }}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
       </div>
@@ -735,7 +777,7 @@ const SalesDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {filteredData.map((entry, index) => (
+                {filteredData.map((entry) => (
                   <tr
                     key={entry.id}
                     className={`border-t border-gray-200 ${entry.sales >= thresholdValue ? 'bg-green-50' : 'hover:bg-gray-50'
@@ -756,7 +798,7 @@ const SalesDashboard = () => {
                       </button>
                       <button
                         className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                        onClick={() => deleteEntry(index)}
+                        onClick={() => deleteEntry(entry.id)}
                       >
                         Delete
                       </button>
@@ -773,49 +815,51 @@ const SalesDashboard = () => {
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Data Visualization</h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
-          <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
-            <h3 className="text-lg md:text-xl font-medium text-gray-700 mb-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 md:w-5 md:h-5" />
-                Daily Sales Trend
+          <ErrorBoundary>
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+              <h3 className="text-lg md:text-xl font-medium text-gray-700 mb-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                  Daily Sales Trend
+                </div>
+              </h3>
+              <div className="h-[300px] md:h-[400px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart 
+                    data={lineData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: '#666' }}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis
+                      tick={{ fill: '#666' }}
+                      label={{ value: 'Sales ($)', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      iconType="circle"
+                      wrapperStyle={{ paddingTop: '10px' }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                      dot={{ fill: '#8884d8' }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-            </h3>
-            <div className="h-[300px] md:h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart 
-                  data={lineData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#666' }}
-                    interval={0}
-                    angle={-45}
-                    textAnchor="end"
-                    height={60}
-                  />
-                  <YAxis
-                    tick={{ fill: '#666' }}
-                    label={{ value: 'Sales ($)', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    iconType="circle"
-                    wrapperStyle={{ paddingTop: '10px' }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="#8884d8"
-                    strokeWidth={2}
-                    dot={{ fill: '#8884d8' }}
-                    activeDot={{ r: 8 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
             </div>
-          </div>
+          </ErrorBoundary>
 
           <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
             <h3 className="text-lg md:text-xl font-medium text-gray-700 mb-4">Sales by Category</h3>
