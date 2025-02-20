@@ -1,13 +1,12 @@
 import * as React from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie,
   XAxis,YAxis,CartesianGrid,Tooltip, Legend,
   ResponsiveContainer, Cell, ComposedChart, Area
 } from 'recharts';
 import {
-  TrendingUp, TrendingDown, Package, DollarSign,
-  Download, FileJson, FileSpreadsheet, Filter, Calendar, ChevronDown
+  TrendingUp, TrendingDown, Package, DollarSign, FileJson, FileSpreadsheet, Filter, Calendar
 } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -233,10 +232,17 @@ const SalesDashboard = () => {
     setSortConfig({ key, direction });
   };
 
-  const lineData = data.map((entry, index) => ({
-    name: `Day ${index + 1}`,
-    value: entry.sales
-  }));
+  const lineData = useMemo(() => {
+    try {
+      return data.map((entry, index) => ({
+        name: `Day ${index + 1}`,
+        value: entry.sales
+      }));
+    } catch (error) {
+      console.error('Error processing data:', error);
+      throw new Error('Failed to process sales data');
+    }
+  }, [data]);
 
 
   const getCategoryData = () => {
