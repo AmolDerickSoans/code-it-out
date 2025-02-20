@@ -592,8 +592,8 @@ const SalesDashboard = () => {
           {editingId ? 'Edit Entry' : 'Add New Entry'}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">Product</label>
             <input
               type="text"
@@ -601,35 +601,23 @@ const SalesDashboard = () => {
               value={formData.product}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sales ($)</label>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sales</label>
             <input
               type="number"
               name="sales"
               value={formData.sales}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          <div>
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">Inventory</label>
             <input
               type="number"
@@ -637,18 +625,30 @@ const SalesDashboard = () => {
               value={formData.inventory}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
-          <div>
+          <div className="w-full">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a Category</option>
               <option value="Electronics">Electronics</option>
@@ -659,14 +659,14 @@ const SalesDashboard = () => {
             </select>
           </div>
 
-          <div>
+          <div className="w-full">
             <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
             <select
               name="region"
               value={formData.region}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">Select a Region</option>
               <option value="North">North</option>
@@ -677,10 +677,10 @@ const SalesDashboard = () => {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 mt-4">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            className="w-full sm:w-auto px-4 md:px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm md:text-base"
           >
             {editingId ? 'Update Entry' : 'Add Entry'}
           </button>
@@ -698,7 +698,7 @@ const SalesDashboard = () => {
                   region: ''
                 });
               }}
-              className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+              className="w-full sm:w-auto px-4 md:px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors text-sm md:text-base"
             >
               Cancel
             </button>
@@ -706,122 +706,132 @@ const SalesDashboard = () => {
         </div>
       </form>
 
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8 mx-6 overflow-x-auto">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Sales Data</h2>
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('product')}>
-                Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('date')}>
-                Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('sales')}>
-                Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('inventory')}>
-                Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('category')}>
-                Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('region')}>
-                Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((entry, index) => (
-              <tr
-                key={entry.id}
-                className={`border-t border-gray-200 ${entry.sales >= thresholdValue ? 'bg-green-50' : 'hover:bg-gray-50'
-                  }`}
-              >
-                <td className="px-6 py-4 text-sm text-gray-700">{entry.product}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{entry.date}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">${entry.sales.toLocaleString()}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{entry.inventory}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{entry.category}</td>
-                <td className="px-6 py-4 text-sm text-gray-700">{entry.region}</td>
-                <td className="px-6 py-4 text-sm space-x-2">
-                  <button
-                    className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
-                    onClick={() => handleEdit(entry)}
+      <div className="bg-white rounded-lg shadow-md p-4 md:p-6 mb-8 mx-2 md:mx-6 overflow-x-auto">
+        <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">Sales Data</h2>
+        <div className="min-w-full inline-block align-middle">
+          <div className="overflow-hidden border rounded-lg">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('product')}>
+                    Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('date')}>
+                    Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('sales')}>
+                    Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('inventory')}>
+                    Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('category')}>
+                    Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('region')}>
+                    Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredData.map((entry, index) => (
+                  <tr
+                    key={entry.id}
+                    className={`border-t border-gray-200 ${entry.sales >= thresholdValue ? 'bg-green-50' : 'hover:bg-gray-50'
+                      }`}
                   >
-                    Edit
-                  </button>
-                  <button
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                    onClick={() => deleteEntry(index)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    <td className="px-6 py-4 text-sm text-gray-700">{entry.product}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{entry.date}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">${entry.sales.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{entry.inventory}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{entry.category}</td>
+                    <td className="px-6 py-4 text-sm text-gray-700">{entry.region}</td>
+                    <td className="px-6 py-4 text-sm space-x-2">
+                      <button
+                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+                        onClick={() => handleEdit(entry)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                        onClick={() => deleteEntry(index)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-6 mx-6">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">Data Visualization</h2>
 
-        <div className="mb-8">
-          <h3 className="text-xl font-medium text-gray-700 mb-4">
-            <div className="flex items-center gap-2">
-              <Calendar size={20} />
-              Daily Sales Trend
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4">
+          <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 className="text-lg md:text-xl font-medium text-gray-700 mb-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                Daily Sales Trend
+              </div>
+            </h3>
+            <div className="h-[300px] md:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart 
+                  data={lineData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: '#666' }}
+                    interval={0}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis
+                    tick={{ fill: '#666' }}
+                    label={{ value: 'Sales ($)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: '10px' }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    dot={{ fill: '#8884d8' }}
+                    activeDot={{ r: 8 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart 
-              data={lineData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="name"
-                tick={{ fill: '#666' }}
-                interval={0}
-                angle={-45}
-                textAnchor="end"
-                height={60}
-              />
-              <YAxis
-                tick={{ fill: '#666' }}
-                label={{ value: 'Sales ($)', angle: -90, position: 'insideLeft' }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                iconType="circle"
-                wrapperStyle={{ paddingTop: '10px' }}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="#8884d8"
-                strokeWidth={2}
-                dot={{ fill: '#8884d8' }}
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+          </div>
 
-        <div className="mb-8">
-          <h3 className="text-xl font-medium text-gray-700 mb-4">Sales by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getCategoryData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <h3 className="text-lg md:text-xl font-medium text-gray-700 mb-4">Sales by Category</h3>
+            <div className="h-[300px] md:h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={getCategoryData()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
 
         <div className="mb-8">
@@ -921,7 +931,7 @@ const SalesDashboard = () => {
                 dataKey="value"
                 label
               >
-                {getRegionData().map((entry, index) => (
+                {getRegionData().map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
