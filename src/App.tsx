@@ -1,10 +1,9 @@
 import React from 'react';
-import './App.css';
 import SalesDashboard from './SalesDashboard';
 
 function App() {
   return (
-    <div className="App">
+    <div className="min-h-screen bg-gray-50">
       <SalesDashboard />
     </div>
   );
