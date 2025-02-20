@@ -7,8 +7,8 @@ import {
 import SalesSummary from './SalesSummary';
 import DataExport from './DataExport';
 import SalesCharts from './SalesChart';
-
-const initialData = [
+import ErrorBoundary from './ErrorBoundary';
+const initialData: SalesData[] = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
   { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
   { id: 3, product: "Ergonomic Chair", date: "2024-01-03", sales: 2100, inventory: 18, category: "Furniture", region: "West" },
@@ -17,6 +17,18 @@ const initialData = [
   { id: 6, product: "Coffee Maker", date: "2024-01-06", sales: 600, inventory: 38, category: "Appliances", region: "East" },
   { id: 7, product: "Bluetooth Speaker", date: "2024-01-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
   { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
+  { id: 9, product: "Running Shoes", date: "2024-02-01", sales: 1300, inventory: 40, category: "Apparel", region: "North" },
+  { id: 10, product: "Smartphone Pro", date: "2024-02-05", sales: 2700, inventory: 22, category: "Electronics", region: "East" },
+  { id: 11, product: "Electric Kettle", date: "2024-03-10", sales: 900, inventory: 35, category: "Appliances", region: "West" },
+  { id: 12, product: "Gaming Console", date: "2024-03-15", sales: 3200, inventory: 18, category: "Electronics", region: "South" },
+  { id: 13, product: "Yoga Mat", date: "2024-04-01", sales: 750, inventory: 50, category: "Fitness", region: "North" },
+  { id: 14, product: "Microwave Oven", date: "2024-04-07", sales: 1600, inventory: 20, category: "Appliances", region: "East" },
+  { id: 15, product: "Office Chair", date: "2024-05-03", sales: 2100, inventory: 17, category: "Furniture", region: "West" },
+  { id: 16, product: "Tablet X10", date: "2024-05-14", sales: 2800, inventory: 12, category: "Electronics", region: "South" },
+  { id: 17, product: "Graphic Tablet", date: "2024-06-01", sales: 1400, inventory: 25, category: "Electronics", region: "North" },
+  { id: 18, product: "Fitness Tracker", date: "2024-06-12", sales: 1000, inventory: 30, category: "Fitness", region: "East" },
+  { id: 19, product: "Digital Camera", date: "2024-07-20", sales: 2300, inventory: 14, category: "Electronics", region: "West" },
+  { id: 20, product: "Blender Pro", date: "2024-07-28", sales: 800, inventory: 37, category: "Appliances", region: "South" }
 ];
 
 interface SalesData {
@@ -535,7 +547,7 @@ const SalesDashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-{/* 
+        {/* 
         <div className="chart-container">
           <h3>Sales by Region</h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -558,24 +570,24 @@ const SalesDashboard = () => {
             </PieChart>
           </ResponsiveContainer>
         </div> */}
+
+        {/* ✅ Use SalesSummary Component */}
+
+
+        =
+
+        {/* ✅ Sales Charts Component */}
+        <SalesCharts data={data} />
+
+        <SalesSummary
+          totalSales={totalSales}
+          avgSales={avgSales}
+          bestSellingProduct={bestSellingProduct}
+        />
+
+        {/* ✅ Data Export Component */}
+        <DataExport data={data} />
       </div>
-      {/* ✅ Use SalesSummary Component */}
-
-
-      =
-
-      {/* ✅ Sales Charts Component */}
-      <SalesCharts data={data} />
-
-      <SalesSummary
-        totalSales={totalSales}
-        avgSales={avgSales}
-        bestSellingProduct={bestSellingProduct}
-      />
-
-      {/* ✅ Data Export Component */}
-      <DataExport data={data} />
-
     </div>
   );
 };
