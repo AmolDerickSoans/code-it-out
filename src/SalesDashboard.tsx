@@ -614,6 +614,29 @@ const SalesDashboard = () => {
             />
           </div>
           
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Sales Filter</label>
+            <select
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
+            >
+              <option value="all">All Sales</option>
+              <option value="highSales">High Sales</option>
+              <option value="lowSales">Low Sales</option>
+              <option value="lowInventory">Low Inventory</option>
+            </select>
+            {activeFilter !== 'lowInventory' && activeFilter !== 'all' && (
+              <input
+                type="number"
+                value={thresholdValue}
+                onChange={(e) => setThresholdValue(Number(e.target.value))}
+                className="mt-2 w-full px-3 py-2 text-sm border border-gray-300 rounded-md"
+                placeholder="Threshold Value"
+              />
+            )}
+          </div>
+          
           <div className="flex items-end">
             <button
               onClick={() => {
