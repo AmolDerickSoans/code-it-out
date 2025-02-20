@@ -131,7 +131,6 @@ const SalesDashboard = () => {
   };
 
   const getRegionData = () => {
-    const regionData = [];
     const regionMap = {};
     
     data.forEach(item => {
@@ -141,9 +140,13 @@ const SalesDashboard = () => {
         regionMap[item.region] = item.sales;
       }
     });
-    
-    return regionData;
+  
+    return Object.keys(regionMap).map(region => ({
+      name: region,
+      value: regionMap[region]
+    }));
   };
+  
 
   // Apply filtering
   let filteredData = data;
