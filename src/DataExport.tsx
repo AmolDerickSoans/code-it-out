@@ -1,4 +1,3 @@
-
 import React from "react";
 
 interface DataExportProps {
@@ -8,25 +7,36 @@ interface DataExportProps {
 const DataExport: React.FC<DataExportProps> = ({ data }) => {
   // Convert data to CSV format
   const convertToCSV = (data: any[]) => {
-    const csvRows = [];
-    const headers = Object.keys(data[0]).join(","); // Get column headers
-    csvRows.push(headers);
+    if (data.length === 0) return "";
 
-    data.forEach((row) => {
-      const values = Object.values(row).map((value) => `"${value}"`).join(",");
-      csvRows.push(values);
-    });
+    const headers = Object.keys(data[0])
+      .map((header) => `"${header}"`)
+      .join(","); // Ensure headers are enclosed in quotes
 
-    return csvRows.join("\n");
+    const csvRows = data.map((row) =>
+      Object.values(row)
+        .map((value) =>
+          typeof value === "string"
+            ? `"${value.replace(/"/g, '""')}"` // Escape double quotes
+            : value
+        )
+        .join(",")
+    );
+
+    return [headers, ...csvRows].join("\n");
   };
 
   // Download file
   const downloadFile = (content: string, fileName: string, fileType: string) => {
     const blob = new Blob([content], { type: fileType });
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    a.href = url;
     a.download = fileName;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // Cleanup memory
   };
 
   // Handle CSV export
@@ -36,7 +46,7 @@ const DataExport: React.FC<DataExportProps> = ({ data }) => {
       return;
     }
     const csvData = convertToCSV(data);
-    downloadFile(csvData, "sales_data.csv", "text/csv");
+    downloadFile(csvData, "filtered_sales_data.csv", "text/csv");
   };
 
   // Handle JSON export
@@ -46,7 +56,7 @@ const DataExport: React.FC<DataExportProps> = ({ data }) => {
       return;
     }
     const jsonData = JSON.stringify(data, null, 2);
-    downloadFile(jsonData, "sales_data.json", "application/json");
+    downloadFile(jsonData, "filtered_sales_data.json", "application/json");
   };
 
   return (

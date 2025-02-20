@@ -547,34 +547,7 @@ const SalesDashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        {/* 
-        <div className="chart-container">
-          <h3>Sales by Region</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={getRegionData()}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div> */}
-
-        {/* ✅ Use SalesSummary Component */}
-
-
-        =
+    
 
         {/* ✅ Sales Charts Component */}
         <SalesCharts data={data} />
