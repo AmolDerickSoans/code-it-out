@@ -6,36 +6,25 @@ body {
   background-color: #f5f7fa;
   /* justify-content: center; */
   /* overflow-x: hidden; */
-  width: 100%;
+  /* width: 100%; */
 }
 
-/* Filter Section */
-.filter-section {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* Filter Button */
-.filter-icon {
-  background: #3498db;
-  border: none;
-  padding: 8px;
-  border-radius: 50%;
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  margin: 12px;
+  /* margin-top: 2px;
+  margin-bottom: 2px;  */
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
+  transition: border-color 0.25s;
 }
-
-.filter-icon:hover {
-  background: #2980b9;
-}
-
-.filter-icon svg {
-  color: white;
+button:hover {
+  border-color: #646cff;
 }
 
 /* Filter Panel */
@@ -58,19 +47,25 @@ body {
   text-align: center;
 }
 
+.sales-dashboard { 
+  width: 100%; 
+  box-sizing: border-box;
+}
+
 .App {
-  width: 100vw;
-  margin: 20px;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .container {
-  width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+  width: 100%; 
+  margin: 0 auto; 
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 /* Visual Filter Builder */
@@ -166,6 +161,7 @@ body {
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 .summary {
   background-color: #ffffff;
@@ -173,6 +169,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
+  box-sizing: border-box;
   /* text-align: center; */
 }
 
@@ -190,13 +187,131 @@ body {
   /* max-width: 100%; */
 } */
 
+/* Filter Dropdown */
+.filter-container {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  width: 250px;
+  position: absolute;
+  top: 40px;
+  right: 10px;
+}
 
+.filter-container label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.filter-container select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+/* Apply Filter Button */
+.filter-container button {
+  width: 100%;
+  padding: 8px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.filter-container button:hover {
+  background-color: #2980b9;
+}
+
+.selected-filters {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.selected-filters span {
+  display: inline-block;
+  background-color: #3498db;
+  color: white;
+  gap: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+/* Filter Buttons */
+.category-filters,
+.region-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.category-filters button,
+.region-filters button {
+  background-color: #f3f3f3;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 6px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.category-filters button:hover,
+.region-filters button:hover {
+  background-color: #e0e0e0;
+}
+
+.category-filters button.selected,
+.region-filters button.selected { 
+  background-color: #c0392b;  
+  color: white;
+  border-color: darkred;
+}
+
+.custom-tooltip {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 4px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.custom-tooltip .label {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.custom-tooltip .desc {
+  margin: 0;
+}
 
 .sales-data-header {
+  position: relative; 
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Aligns title left, icon right */
-  gap: 10px;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sales-data-header span {
+  margin-right: auto; 
 }
 
 .filter-icon {
@@ -207,7 +322,7 @@ body {
 }
 
 .filter-icon:hover {
-  color: #3498db; /* Changes color on hover */
+  color: #3498db; 
 }
 
 
@@ -216,7 +331,7 @@ body {
 }
 
 .search-bar input {
-  width: 100%;
+  width: 98%;
   padding: 10px;
   border: 1px solid #dcdfe6;
   background-color: white;
@@ -235,18 +350,17 @@ body {
 .filter-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 1px;
   align-items: center;
   width: 100%;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 
 .filter-buttons {
   display: flex;
   gap: 10px;
 }
-
-/* Dropdown Box */
 
 .dropdown-box {
   position: absolute;
@@ -323,10 +437,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 
 
-
-
-
-
 .filter-controls button {
   padding: 8px 15px;
   background-color: #f0f2f5;
@@ -338,6 +448,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .filter-controls button.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #2980b9;
+}
+
+.filter-controls button:hover {
   background-color: #3498db;
   color: white;
   border-color: #2980b9;
@@ -359,13 +475,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: #333;
 }
 
-/* Data Form */
+
 .data-form {
   background-color: #ffffff;
   padding: 20px;
   margin-bottom: 30px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
 .data-form h2 {
@@ -397,6 +514,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .form-group select {
   width: 100%;
   padding: 10px;
+  padding-right: 2px;
   border: 1px solid #dcdfe6;
   background-color: white;
   border-radius: 4px;
@@ -428,14 +546,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #7f8c8d;
 }
 
-/* Data Table */
 .data-table-container {
   background-color: #ffffff;
   padding: 20px;
   margin-bottom: 30px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow-x: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .data-table-container h2 {
@@ -505,7 +623,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background-color: #c0392b;
 }
 
-/* Charts Section */
+
 .charts-section {
   background-color: #ffffff;
   padding: 20px;
@@ -528,6 +646,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   color: #34495e;
   font-weight: 500;
 }
+
+
+
 
 /* Responsive Design */
 @media (max-width: 768px) {

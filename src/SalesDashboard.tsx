@@ -9,6 +9,7 @@ import { FaFilter } from "react-icons/fa";
 
 
 
+
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
   { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
@@ -17,7 +18,7 @@ const initialData = [
   { id: 5, product: "Office Desk", date: "2024-01-05", sales: 1200, inventory: 24, category: "Furniture", region: "North" },
   { id: 6, product: "Coffee Maker", date: "2024-01-06", sales: 600, inventory: 38, category: "Appliances", region: "East" },
   { id: 7, product: "Bluetooth Speaker", date: "2024-01-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
-  { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
+  { id: 8, product: "Standing Desk", date: "2024-03-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
 ];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
@@ -43,14 +44,87 @@ const SalesDashboard = () => {
   const [selectedRegions, setSelectedRegions] = useState([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showRegionDropdown, setShowRegionDropdown] = useState(false);
-  const [filters, setFilters] = useState([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [displayedData, setDisplayedData] = useState(initialData);
 
+  const [filters, setFilters] = useState<{ category: string[]; region: string[] }>({
+    category: [],
+    region: [],
+  });
+  
+  const handleFilterColor = (filter) => {
+    setActiveFilter(filter);
+  };
 
+  const toggleFilter = () => setIsFilterOpen(!isFilterOpen);
+  
+  const handleMultiSelect = (type: "category" | "region", value: string) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [type]: prevFilters[type].includes(value)
+        ? prevFilters[type].filter((item) => item !== value) 
+        : [...prevFilters[type], value],
+    }));
+  };
 
+  const handleDoubleClick = (type, value) => {
+    if (type === "category") {
+      setSelectedCategories((prev) =>
+        prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+      );
+    } else if (type === "region") {
+      setSelectedRegions((prev) =>
+        prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+      );
+    }
+  };
   
   
+  
+  
+  const applyFilter = () => {
+    let filtered = initialData;
+  
+    if (filters.category.length > 0) {
+      filtered = filtered.filter(item => filters.category.includes(item.category));
+    }
+    if (filters.region.length > 0) {
+      filtered = filtered.filter(item => filters.region.includes(item.region));
+    }
+  
+    setDisplayedData(filtered);
+    setData(filtered);
+  };
+  
 
+  const getCategoryRegionData = () => {
+    const categoryRegionMap: Record<string, Record<string, number>> = {};
+  
+    data.forEach((item) => {
+      const category = item.category;
+      const region = item.region;
+  
+      if (!categoryRegionMap[category]) {
+        categoryRegionMap[category] = {};
+      }
+      categoryRegionMap[category][region] = (categoryRegionMap[category][region] || 0) + item.sales;
+    });
+  
+    const result = [];
+    for (const category in categoryRegionMap) {
+      const regionData = categoryRegionMap[category];
+      const categoryEntry: Record<string, string | number> = { category };
+      for (const region in regionData) {
+        categoryEntry[region] = regionData[region];
+      }
+      result.push(categoryEntry);
+    }
+    return result;
+  };
+  
 
+  const categoryRegionData = getCategoryRegionData();
+  const regions = ["North", "East", "West", "South"]; 
 
   const toggleDateDropdown = () => {
     setShowDateDropdown((prev) => !prev);
@@ -77,7 +151,7 @@ const SalesDashboard = () => {
     setShowRegionDropdown((prev) => !prev);
   };
   
-  // Close dropdowns when clicking outside
+
   const closeDropdowns = (e) => {
     if (!e.target.closest(".dropdown-box") && !e.target.closest(".category-dropdown")) {
       setShowCategoryDropdown(false);
@@ -198,9 +272,7 @@ const SalesDashboard = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterChange = (filter) => {
-    setActiveFilter(filter);
-  };
+
 
   const handleThresholdChange = (e) => {
     setThresholdValue(Number(e.target.value));
@@ -217,7 +289,7 @@ const SalesDashboard = () => {
 
   let filteredData = [...data];
 
-  // Apply existing manual filters
+
   if (dateRange.start && dateRange.end) {
     filteredData = filteredData.filter(
       (item) => item.date >= dateRange.start && item.date <= dateRange.end
@@ -246,13 +318,14 @@ const SalesDashboard = () => {
         item.region.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
-  
-  // Apply filters from react-visual-filter
-  // // filteredData = filteredData.filter((item) =>
-  // //   filters.every(({ key, value }) =>
-  // //     value ? item[key]?.toString().toLowerCase().includes(value.toString().toLowerCase()) : true
-  // //   )
-  // );
+  if (activeFilter === "highSales") {
+    filteredData.sort((a, b) => b.sales - a.sales);
+  } else if (activeFilter === "lowSales") {
+    filteredData.sort((a, b) => a.sales - b.sales); 
+  } else if (activeFilter == "lowInventory") {
+    filteredData.sort((a,b) =>a.inventory - b.inventory);
+  }
+
   
   
  
@@ -267,18 +340,50 @@ const handleMultiSelectChange = (e, type) => {
   }
 };
 
-const handleAddFilter = (type, value) => {
-  setFilters((prevFilters) => [...prevFilters, { type, value }]);
-};
-
-const handleRemoveFilter = (index) => {
-  setFilters((prevFilters) => prevFilters.filter((_, i) => i !== index));
-};
 
   const lineData = data.map((entry, index) => ({
     name: `Day ${index + 1}`,
     value: entry.sales
   }));
+
+  const monthData = Object.values(
+    data.reduce((acc, entry) => {
+      const month = new Date(entry.date).toLocaleString("default", { month: "long" });
+  
+      if (!acc[month]) {
+        acc[month] = { name: month, value: 0 };
+      }
+  
+      acc[month].value += entry.sales;
+      return acc;
+    }, {} as Record<string, { name: string; value: number }>)
+  ).map((entry, index, arr) => {
+    if (index === 0) {
+      return { ...entry, growth: null }; 
+    }
+  
+    const prevMonthValue = arr[index - 1].value;
+    const growth = ((entry.value - prevMonthValue) / prevMonthValue) * 100; 
+    return { ...entry, growth: growth.toFixed(2) }; 
+  });
+
+  
+  const CustomTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
+    if (!active || !payload || payload.length === 0) return null;
+  
+    const { value, growth } = payload[0].payload;
+    const growthText = growth !== null ? `${growth}%` : "N/A";
+    const growthColor = growth !== null && growth > 0 ? "green" : "red"; 
+  
+    return (
+      <div className="custom-tooltip" style={{ background: "white", padding: "10px", border: "1px solid #ccc", borderRadius: "8px", boxShadow: "0px 2px 5px rgba(0,0,0,0.2)" }}>
+        <p style={{ fontWeight: "bold", color: "#333" }}>Month: {label}</p>
+        <p style={{ fontWeight: "bold", color: "#555" }}>Sales: ${value}</p>
+        <p style={{ color: growthColor }}>MoM Growth: {growthText}</p>
+      </div>
+    );
+  };
+  
 
   const getCategoryData = () => {
     const categoryMap = {};
@@ -298,7 +403,7 @@ const handleRemoveFilter = (index) => {
 
   const getRegionData = () => {
     const regionMap = {};
-    
+
     data.forEach(item => {
       if (regionMap[item.region]) {
         regionMap[item.region] += item.sales;
@@ -306,7 +411,7 @@ const handleRemoveFilter = (index) => {
         regionMap[item.region] = item.sales;
       }
     });
-  
+
     return Object.keys(regionMap).map(region => ({
       name: region,
       value: regionMap[region]
@@ -347,6 +452,7 @@ const handleRemoveFilter = (index) => {
   }
 
   return (
+    <div className="container">
     <div className="sales-dashboard">
       <h1>Sales Dashboard</h1>
       <div className='content-section'>
@@ -360,28 +466,27 @@ const handleRemoveFilter = (index) => {
         </div>
         
         <div className="filter-controls">
-        <div className="filter-buttons">
           <button 
             className={activeFilter === 'all' ? 'active' : ''} 
-            onClick={() => handleFilterChange('all')}
+            onClick={() => handleFilterColor('all')}
           >
             All Data
           </button>
           <button 
             className={activeFilter === 'highSales' ? 'active' : ''} 
-            onClick={() => handleFilterChange('highSales')}
+            onClick={() => handleFilterColor('highSales')}
           >
             High Sales
           </button>
           <button 
             className={activeFilter === 'lowSales' ? 'active' : ''} 
-            onClick={() => handleFilterChange('lowSales')}
+            onClick={() => handleFilterColor('lowSales')}
           >
             Low Sales
           </button>
           <button 
             className={activeFilter === 'lowInventory' ? 'active' : ''} 
-            onClick={() => handleFilterChange('lowInventory')}
+            onClick={() => handleFilterColor('lowInventory')}
           >
             Low Inventory
           </button>
@@ -395,7 +500,7 @@ const handleRemoveFilter = (index) => {
               min="0"
             />
           </label>
-          </div>
+          
 
           <div className="expt">
             <button onClick={() => exportData('csv')}>Export CSV</button>
@@ -523,16 +628,56 @@ const handleRemoveFilter = (index) => {
 
       {/* Data Table */}
 
-      <div className="data-table-container">
-      <h2 className="sales-data-header">
-  Sales Data <FaFilter className="filter-icon" />
-</h2>
+    <div className="data-table-container">
+      <div className="sales-data-header">
+        <h2 className="sales-data-header">
+          Sales Data
+        </h2>
+        <span className="filter-icon" onClick={toggleFilter}>
+            <FaFilter />
+          </span>
+      </div> 
 
+ {isFilterOpen && (
+  <div className="filter-container">
+    <div className="selected-filters">
+      {filters.category.length > 0 && (
+        <span>Category: {filters.category.map((item) => `+${item}`).join(", ")}</span>
+      )}
+      {filters.region.length > 0 && (
+        <span>Region: {filters.region.map((item) => `+${item}`).join(", ")}</span>
+      )}
+    </div>
 
+    <label>Category:</label>
+    <div className="category-filters">
+      {["Electronics", "Furniture", "Appliances"].map((category) => (
+        <button 
+          key={category} 
+          className={filters.category.includes(category) ? "selected" : ""} 
+          onClick={() => handleMultiSelect("category", category)}
+        >
+          {filters.category.includes(category) ? `➖${category}` : `➕${category}`}
+        </button>
+      ))}
+    </div>
+
+    <label>Region:</label>
+    <div className="region-filters">
+      {["North", "East", "West", "South"].map((region) => (
+        <button 
+          key={region} 
+          className={filters.region.includes(region) ? "selected" : ""} 
+          onClick={() => handleMultiSelect("region", region)}
+        >
+          {filters.region.includes(region) ? `➖${region}` : `➕${region}`}
+        </button>
+      ))}
+    </div>
+        <button onClick={applyFilter}>Apply Filter</button>
+    </div>
+      )}
         
-
-
-
         <table className="data-table">
           <thead>
             <tr>
@@ -573,15 +718,24 @@ const handleRemoveFilter = (index) => {
               <th className="category-dropdown" onClick={toggleCategoryDropdown}>
                 Category {sortConfig.key === "category" && (sortConfig.direction === "ascending" ? "↑" : "↓")}
                 
-                {showCategoryDropdown && (
-                  <div className="dropdown-box" onClick={(e) => e.stopPropagation()}>
+              {showCategoryDropdown && (
+                <div className="dropdown-box" onClick={(e) => e.stopPropagation()}>
                     <label>Select Categories:</label>
-                    <select multiple value={selectedCategories} onChange={(e) => handleMultiSelectChange(e, "category")}>
-                      <option value="Electronics" className='p1'>Electronics</option>
-                      <option value="Furniture" className='p1'>Furniture</option>
-                      <option value="Appliances" className='p1'>Appliances</option>
-                      <option value="Clothing" className='p1'>Clothing</option>
-                      <option value="Books" className='p1'>Books</option>
+                    <select 
+                      multiple 
+                      value={selectedCategories} 
+                      onChange={(e) => handleMultiSelectChange(e, "category")}
+                    >
+                      {["Electronics", "Furniture", "Appliances", "Clothing", "Books"].map((category) => (
+                        <option 
+                          key={category} 
+                          value={category} 
+                          className="p1"
+                          onDoubleClick={() => handleDoubleClick("category", category)} 
+                        >
+                          {category}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -593,11 +747,21 @@ const handleRemoveFilter = (index) => {
                 {showRegionDropdown && (
                   <div className="dropdown-box" onClick={(e) => e.stopPropagation()}>
                     <label>Select Regions:</label>
-                    <select multiple value={selectedRegions} onChange={(e) => handleMultiSelectChange(e, "region")}>
-                      <option value="North" className='p1'>North</option>
-                      <option value="South" className='p1'>South</option>
-                      <option value="East" className='p1'>East</option>
-                      <option value="West" className='p1'>West</option>
+                    <select 
+                      multiple 
+                      value={selectedRegions} 
+                      onChange={(e) => handleMultiSelectChange(e, "region")}
+                    >
+                      {["North", "East", "West", "South"].map((region) => (
+                        <option 
+                          key={region} 
+                          value={region} 
+                          className="p1"
+                          onDoubleClick={() => handleDoubleClick("region", region)} 
+                        >
+                          {region}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 )}
@@ -664,15 +828,16 @@ const handleRemoveFilter = (index) => {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={getRegionData()}
+                data={getRegionData()}  
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey="value"
+                dataKey="value" 
+                nameKey="name" 
                 label
               >
-                {data.map((entry, index) => (
+                {getRegionData().map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -681,8 +846,41 @@ const handleRemoveFilter = (index) => {
             </PieChart>
           </ResponsiveContainer>
         </div>
-      </div>
 
+        <div className="chart-container">
+          <h3>Sales by Category and Region</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={categoryRegionData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" angle={0} textAnchor="end" interval={0} label={{ position: 'bottom', offset: 0 }} />
+              <YAxis label={{angle: -90, position: 'insideLeft' }} />
+              <Tooltip/>
+              <Legend />
+              {regions.map((region, index) => (
+                <Bar key={region} dataKey={region} stackId="1" fill={COLORS[index % COLORS.length]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-container">
+          <h3>Month over month growth</h3>
+          <ResponsiveContainer width="100%" height={300}>
+  <LineChart data={monthData}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip content={<CustomTooltip />} />
+    <Legend />
+    <Line type="monotone" dataKey="value" stroke="#8884d8" />
+  </LineChart>
+</ResponsiveContainer>
+
+        </div>
+
+        </div>
+
+    </div>
     </div>
     
   );
