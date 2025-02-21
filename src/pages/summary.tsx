@@ -1,5 +1,5 @@
-import React,{useState} from 'react'
-import { initialData,Item, calculateKeyMetrics,getCategoryData,getRegionData,getMonthlyGrowthData,COLORS } from '../server/services';
+import {useState} from 'react'
+import { initialData, calculateKeyMetrics,getCategoryData,getRegionData,getMonthlyGrowthData,COLORS } from '../server/services';
 import {
     LineChart,
     Line,
@@ -18,17 +18,7 @@ import {
 
 const Summary = () => {
 
-    const [data, setData] = useState(initialData);
-      const [formData, setFormData] = useState({
-        product: "",
-        date: "",
-        sales: "",
-        inventory: "",
-        category: "",
-        region: "",
-      });
-      const [editingId, setEditingId] = useState<number | null>(null);
-      const [searchTerm, setSearchTerm] = useState("");
+    const data = initialData;
       const [sortConfig, setSortConfig] = useState<{
         key: string | null;
         direction: string;
@@ -36,37 +26,6 @@ const Summary = () => {
         key: null,
         direction: "ascending",
       });
-      const [activeFilter, setActiveFilter] = useState("all");
-      const [thresholdValue, setThresholdValue] = useState(1000);
-    
-      const deleteEntry = (id: number) => {
-        const newData = data.filter((item) => item.id !== id);
-        setData(newData);
-      };
-    
-    
-      const handleEdit = (item: Item) => {
-        setFormData({
-          product: item.product,
-          date: item.date,
-          sales: item.sales.toString(),
-          inventory: item.inventory.toString(),
-          category: item.category,
-          region: item.region,
-        });
-        setEditingId(item.id);
-      };
-    
-      const handleChange = (
-        e:
-          | React.ChangeEvent<HTMLSelectElement>
-          | React.ChangeEvent<HTMLInputElement>
-      ) => {
-        setFormData({
-          ...formData,
-          [e.target.name]: e.target.value,
-        });
-      };
     
       const requestSort = (key: string | null) => {
         let direction = "ascending";
@@ -85,24 +44,7 @@ const Summary = () => {
     
       let filteredData = data;
     
-      if (activeFilter !== "all") {
-        if (activeFilter === "highSales") {
-          filteredData = data.filter((item) => item.sales >= thresholdValue);
-        } else if (activeFilter === "lowSales") {
-          filteredData = data.filter((item) => item.sales < thresholdValue);
-        } else if (activeFilter === "lowInventory") {
-          filteredData = data.filter((item) => item.inventory < 30);
-        }
-      }
     
-      if (searchTerm) {
-        filteredData = filteredData.filter(
-          (item) =>
-            item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.region.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
     
       const { totalSales, averageSales, bestSellingProduct } =
         calculateKeyMetrics(data);
@@ -144,14 +86,12 @@ const Summary = () => {
                   {sortConfig.key === "region" &&
                     (sortConfig.direction === "ascending" ? "↑" : "↓")}
                 </th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.map((entry, index) => (
                 <tr
                   key={index}
-                  className={entry.sales >= thresholdValue ? "high-sales" : ""}
                 >
                   <td>{entry.product}</td>
                   <td>{entry.date}</td>
@@ -159,21 +99,6 @@ const Summary = () => {
                   <td>{entry.inventory}</td>
                   <td>{entry.category}</td>
                   <td>{entry.region}</td>
-                  <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(entry)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className="delete-btn"
-                      onClick={() => deleteEntry(entry.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>

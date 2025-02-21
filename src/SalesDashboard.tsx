@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { initialData, getCategoryData, getMonthlyGrowthData,getRegionData,COLORS } from "./server/services";
+import {
+  initialData,
+  getCategoryData,
+  getMonthlyGrowthData,
+  getRegionData,
+  COLORS,
+} from "./server/services";
 import {
   LineChart,
   Line,
@@ -16,7 +22,6 @@ import {
   Cell,
 } from "recharts";
 import { calculateKeyMetrics } from "./server/services";
-
 
 interface Item {
   id: number;
@@ -196,8 +201,6 @@ const SalesDashboard = () => {
     });
   }
 
- 
-
   const { totalSales, averageSales, bestSellingProduct } =
     calculateKeyMetrics(data);
 
@@ -244,6 +247,7 @@ const SalesDashboard = () => {
             <label>
               Categories:
               <select
+                multiple
                 value={selectedCategories}
                 onChange={(e) => {
                   const options = e.target.options;
@@ -267,6 +271,7 @@ const SalesDashboard = () => {
             <label>
               Regions:
               <select
+                multiple
                 value={selectedRegions}
                 onChange={(e) => {
                   const options = e.target.options;
@@ -583,7 +588,9 @@ const SalesDashboard = () => {
                 {COLORS.map((color, index) => (
                   <Bar
                     key={index}
-                    dataKey={Object.keys(getRegionData(data)[0] || {})[index + 1]}
+                    dataKey={
+                      Object.keys(getRegionData(data)[0] || {})[index + 1]
+                    }
                     fill={color}
                     stackId="a"
                   />

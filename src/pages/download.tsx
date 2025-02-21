@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Item, initialData } from "../server/services";
 
 const Download = () => {
-  const [data, setData] = useState(initialData);
+  const data = initialData;
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{
     key: string | null;
@@ -192,6 +192,7 @@ const Download = () => {
           <label>
             Categories:
             <select
+            multiple
               value={selectedCategories}
               onChange={(e) => {
                 const options = e.target.options;
@@ -204,6 +205,7 @@ const Download = () => {
                 setSelectedCategories(value);
               }}
             >
+              <option value="">Select Option</option>
               <option value="Electronics">Electronics</option>
               <option value="Furniture">Furniture</option>
               <option value="Appliances">Appliances</option>
@@ -215,6 +217,7 @@ const Download = () => {
           <label>
             Regions:
             <select
+            multiple
               value={selectedRegions}
               onChange={(e) => {
                 const options = e.target.options;
@@ -227,6 +230,7 @@ const Download = () => {
                 setSelectedRegions(value);
               }}
             >
+              <option value="">Select Option</option>
               <option value="North">North</option>
               <option value="South">South</option>
               <option value="East">East</option>

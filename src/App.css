@@ -153,12 +153,18 @@ body {
 }
 
 .content-section select {
-  width: 100%;
+  max-height: 40px;
+  overflow: auto;
+  width: 120px;
   padding: 10px;
   border: 1px solid #dcdfe6;
   border-radius: 4px;
   font-size: 14px;
   color: #333;
+
+  option{
+    margin: 0px 0px 8px;
+  }
 }
 
 .data-form button {
@@ -313,7 +319,6 @@ body {
 
 .App{
   margin-top:100px;
-  height:90vh;
 }
 .metric {
   display: flex;
@@ -396,4 +401,62 @@ body {
 
 .container{
   margin-top: 100px;
+}
+
+
+
+
+
+.summary-section {
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.summary-section h2 {
+  font-size: 2em;
+  color: #444;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.metric:last-child {
+  border-bottom: none; /* Remove border from the last metric */
+}
+
+.metric span {
+  font-size: 1.2em;
+  color: #555;
+}
+
+.metric span:last-child {
+  font-weight: bold;
+  color: #007bff; /* Bootstrap primary color */
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .sales-dashboard {
+      padding: 10px;
+  }
+
+  .sales-dashboard h1 {
+      font-size: 2em;
+  }
+
+  .summary-section h2 {
+      font-size: 1.5em;
+  }
+
+  .metric span {
+      font-size: 1em;
+  }
 }
