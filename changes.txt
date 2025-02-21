@@ -1,0 +1,10 @@
+DEBUGGING:
+1. Pie chart fix.
+2. Fixed delete function. It was taking index as parameter. now id of item is passed in the delete function so that if rearranging of items take place then the correct item only, gets deleted. 
+3. key property in list of items is changed from key = {index} to key = {entry.id}.
+4. Now, whiling adding new entry or editing an existing one, negative numbers can not be entered for Sales and Inventory.
+5. While sorting it used to compare numbers as string which would output "10" as less than "3". Now, it converts the number from string to Number and then compares.
+
+Added functionalities:
+1. Summary Statistics
+2. 

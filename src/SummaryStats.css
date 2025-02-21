@@ -1,0 +1,66 @@
+.summary-container {
+  padding: 20px;
+  background: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  max-width: 600px;
+  margin: auto;
+}
+p{
+  color: black;
+}
+
+.summary-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.summary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.summary-card {
+  flex: 1;
+  min-width: 180px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.summary-value {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+.summary-product {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.summary-sales {
+  font-size: 14px;
+  color: gray;
+}
+
+.summary-change {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.positive {
+  color: green;
+}
+
+.negative {
+  color: red;
+}

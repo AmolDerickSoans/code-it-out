@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, Cell
 } from 'recharts';
+import SummaryStats from './SummaryStats.tsx';
+
 
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
@@ -16,10 +19,13 @@ const initialData = [
   { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
 ];
 
+
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const SalesDashboard = () => {
   const [data, setData] = useState(initialData);
+  const [prevData, setPrevData] = useState(initialData);
   const [formData, setFormData] = useState({
     product: '',
     date: '',
@@ -34,16 +40,22 @@ const SalesDashboard = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
 
-  const deleteEntry = (index) => {
-    const newData = data.filter((_, i) => i !== index);
+  const deleteEntry = (id: number) => {
+    const newData = data.filter(item => item.id !== id);
     setData(newData);
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     const salesValue = Number(formData.sales);
     const inventoryValue = Number(formData.inventory);
+
+    if (isNaN(salesValue) || isNaN(inventoryValue) || salesValue < 0 || inventoryValue < 0) {
+      alert("Sales and Inventory must be valid positive numbers.");
+      return;
+    }
     
     if (editingId) {
       const updatedData = data.map(item => 
@@ -131,9 +143,9 @@ const SalesDashboard = () => {
   };
 
   const getRegionData = () => {
-    const regionData = [];
+
     const regionMap = {};
-    
+  
     data.forEach(item => {
       if (regionMap[item.region]) {
         regionMap[item.region] += item.sales;
@@ -141,9 +153,16 @@ const SalesDashboard = () => {
         regionMap[item.region] = item.sales;
       }
     });
-    
+  
+    const regionData = Object.keys(regionMap).map(region => ({
+      name: region,
+      value: regionMap[region],
+    }));
+  
     return regionData;
+
   };
+  
 
   // Apply filtering
   let filteredData = data;
@@ -168,15 +187,72 @@ const SalesDashboard = () => {
   
   if (sortConfig.key) {
     filteredData.sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+    
+      if (!isNaN(aValue) && !isNaN(bValue)) {
+        aValue = Number(aValue);
+        bValue = Number(bValue);
+      }
+    
+      if (aValue < bValue) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (aValue > bValue) {
         return sortConfig.direction === 'ascending' ? 1 : -1;
       }
       return 0;
     });
+    
   }
+
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [salesFilter, setSalesFilter] = useState<number>(0);
+
+  // Sorting function
+  const sortedData = [...data].sort((a, b) =>
+    sortOrder === "asc" ? a.sales - b.sales : b.sales - a.sales
+  );
+
+  // Filtering function
+  const filteredData1 = sortedData.filter((item) => item.sales >= salesFilter);
+
+  // Export Data as CSV (All Columns)
+  const exportToCSV = () => {
+    const headers = Object.keys(initialData[0]).join(",") + "\n";
+    const csvRows = filteredData1
+      .map((item) =>
+        Object.values(item)
+          .map((value) => `"${value}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const csvContent = headers + csvRows;
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "filtered_sales_data.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export Data as JSON (All Columns)
+  const exportToJSON = () => {
+    const jsonStr = JSON.stringify(filteredData1, null, 2);
+    const blob = new Blob([jsonStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "filtered_sales_data.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="sales-dashboard">
@@ -284,10 +360,10 @@ const SalesDashboard = () => {
         <div className="form-row">
           <div className="form-group">
             <label>Category</label>
-            <select 
-              name="category" 
-              value={formData.category} 
-              onChange={handleChange} 
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
               required
             >
               <option value="">Select a Category</option>
@@ -363,8 +439,8 @@ const SalesDashboard = () => {
           </thead>
           <tbody>
             
-            {filteredData.map((entry, index) => (
-              <tr key={index} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
+            {filteredData.map((entry) => (
+              <tr key={entry.id} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
                 <td>{entry.product}</td>
                 <td>{entry.date}</td>
                 <td>{entry.sales}</td>
@@ -373,8 +449,7 @@ const SalesDashboard = () => {
                 <td>{entry.region}</td>
                 <td>
                   <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
-          
-                  <button className="delete-btn" onClick={() => deleteEntry(index)}>Delete</button>
+                  <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -435,8 +510,38 @@ const SalesDashboard = () => {
             </PieChart>
           </ResponsiveContainer>
         </div>
+
+        <div>
+      <SummaryStats data={data} prevData={prevData}/>
+    </div>
+    
+    <div className="dashboard-container">
+      {/* Sorting Controls */}
+      <div className="controls" style={{color: 'black'}}>
+        <label>Sort by Sales: </label>
+        <select onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}>
+          <option value="desc">Highest to Lowest</option>
+          <option value="asc">Lowest to Highest</option>
+        </select>
+
+        {/* Filtering Controls */}
+        <label>Filter Sales Above: </label>
+        <input
+          type="number"
+          value={salesFilter}
+          onChange={(e) => setSalesFilter(Number(e.target.value))}
+        />
       </div>
-  
+
+      {/* Export Buttons */}
+      <div className="export-buttons">
+        <button onClick={exportToCSV}>Export as CSV</button>
+        <button onClick={exportToJSON}>Export as JSON</button>
+      </div>
+    </div>
+    
+      </div>
+          
     </div>
   );
 };
