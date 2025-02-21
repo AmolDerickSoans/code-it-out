@@ -5,7 +5,10 @@ import {
   getMonthlyGrowthData,
   getRegionData,
   COLORS,
+  categoryOptions,
+  regionOptions,
 } from "./server/services";
+import Select from 'react-select';
 import {
   LineChart,
   Line,
@@ -56,6 +59,8 @@ const SalesDashboard = () => {
   const [thresholdValue, setThresholdValue] = useState(1000);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const deleteEntry = (id: number) => {
     const newData = data.filter((item) => item.id !== id);
@@ -188,6 +193,19 @@ const SalesDashboard = () => {
     );
   }
 
+  if (startDate || endDate) {
+    filteredData = filteredData.filter((item) => {
+      const itemDate = new Date(item.date);
+      const start = startDate ? new Date(startDate) : null;
+      const end = endDate ? new Date(endDate) : null;
+
+      return (
+        (!start || itemDate >= start) &&
+        (!end || itemDate <= end)
+      );
+    });
+  }
+
   if (sortConfig.key) {
     filteredData.sort((a, b) => {
       const key = sortConfig.key as keyof typeof a;
@@ -245,50 +263,43 @@ const SalesDashboard = () => {
             </button>
 
             <label>
+            Start Date:
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e)=>{setStartDate(e.target.value)}}
+            />
+          </label>
+
+          <label>
+            End Date:
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e)=>{setEndDate(e.target.value)}}
+            />
+          </label>
+
+            <label>
               Categories:
-              <select
-                multiple
-                value={selectedCategories}
-                onChange={(e) => {
-                  const options = e.target.options;
-                  const value = [];
-                  for (let i = 0; i < options.length; i++) {
-                    if (options[i].selected) {
-                      value.push(options[i].value);
-                    }
-                  }
-                  setSelectedCategories(value);
-                }}
-              >
-                <option value="Electronics">Electronics</option>
-                <option value="Furniture">Furniture</option>
-                <option value="Appliances">Appliances</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Books">Books</option>
-              </select>
+              <Select
+              isMulti
+              options={categoryOptions}
+              value={categoryOptions.filter(option => selectedCategories.includes(option.value))}
+              onChange={(e) => setSelectedCategories(e.map(option => option.value as string))}
+              className="text-sm"
+            />
             </label>
 
             <label>
               Regions:
-              <select
-                multiple
-                value={selectedRegions}
-                onChange={(e) => {
-                  const options = e.target.options;
-                  const value = [];
-                  for (let i = 0; i < options.length; i++) {
-                    if (options[i].selected) {
-                      value.push(options[i].value);
-                    }
-                  }
-                  setSelectedRegions(value);
-                }}
-              >
-                <option value="North">North</option>
-                <option value="South">South</option>
-                <option value="East">East</option>
-                <option value="West">West</option>
-              </select>
+              <Select
+              isMulti
+              options={regionOptions}
+              value={regionOptions.filter(option => selectedRegions.includes(option.value))}
+              onChange={(e) => setSelectedRegions(e.map(option => option.value as string))}
+              className="text-sm"
+            />
             </label>
 
             <label>
@@ -362,6 +373,7 @@ const SalesDashboard = () => {
               </label>
             </div>
           </div>
+
 
           <div className="form-row">
             <div className="form-group">
@@ -577,7 +589,7 @@ const SalesDashboard = () => {
           </div>
 
           <div className="chart-container">
-            <h3>Sales by category</h3>
+            <h3>Sales by Region</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={getRegionData(data)}>
                 <CartesianGrid strokeDasharray="3 3" />

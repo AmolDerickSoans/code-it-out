@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Item, initialData } from "../server/services";
+import {
+  Item,
+  initialData,
+  categoryOptions,
+  regionOptions,
+} from "../server/services";
+import Select from "react-select";
 
 const Download = () => {
   const data = initialData;
@@ -15,6 +21,8 @@ const Download = () => {
   const [thresholdValue, setThresholdValue] = useState(1000);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -152,163 +160,170 @@ const Download = () => {
 
   return (
     <div className="App">
-      <div className="content-section">
-        <div className="search-bar">
-          <input
-            id="Search"
-            type="text"
-            placeholder="Search products, categories, regions..."
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </div>
-
-        <div className="filter-controls">
-          <button
-            className={activeFilter === "all" ? "active" : ""}
-            onClick={() => handleFilterChange("all")}
-          >
-            All Data
-          </button>
-          <button
-            className={activeFilter === "highSales" ? "active" : ""}
-            onClick={() => handleFilterChange("highSales")}
-          >
-            High Sales
-          </button>
-          <button
-            className={activeFilter === "lowSales" ? "active" : ""}
-            onClick={() => handleFilterChange("lowSales")}
-          >
-            Low Sales
-          </button>
-          <button
-            className={activeFilter === "lowInventory" ? "active" : ""}
-            onClick={() => handleFilterChange("lowInventory")}
-          >
-            Low Inventory
-          </button>
-
-          <label>
-            Categories:
-            <select
-            multiple
-              value={selectedCategories}
-              onChange={(e) => {
-                const options = e.target.options;
-                const value = [];
-                for (let i = 0; i < options.length; i++) {
-                  if (options[i].selected) {
-                    value.push(options[i].value);
-                  }
-                }
-                setSelectedCategories(value);
-              }}
-            >
-              <option value="">Select Option</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Furniture">Furniture</option>
-              <option value="Appliances">Appliances</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Books">Books</option>
-            </select>
-          </label>
-
-          <label>
-            Regions:
-            <select
-            multiple
-              value={selectedRegions}
-              onChange={(e) => {
-                const options = e.target.options;
-                const value = [];
-                for (let i = 0; i < options.length; i++) {
-                  if (options[i].selected) {
-                    value.push(options[i].value);
-                  }
-                }
-                setSelectedRegions(value);
-              }}
-            >
-              <option value="">Select Option</option>
-              <option value="North">North</option>
-              <option value="South">South</option>
-              <option value="East">East</option>
-              <option value="West">West</option>
-            </select>
-          </label>
-
-          <label>
-            Threshold:
+      <div className="dow-container">
+        <div className="content-section">
+          <div className="search-bar">
             <input
-              id="thresholdvalue"
-              type="number"
-              value={thresholdValue}
-              onChange={handleThresholdChange}
-              min="0"
+              id="Search"
+              type="text"
+              placeholder="Search products, categories, regions..."
+              value={searchTerm}
+              onChange={handleSearch}
             />
-          </label>
+          </div>
+
+          <div className="filter-controls">
+            <button
+              className={activeFilter === "all" ? "active" : ""}
+              onClick={() => handleFilterChange("all")}
+            >
+              All Data
+            </button>
+            <button
+              className={activeFilter === "highSales" ? "active" : ""}
+              onClick={() => handleFilterChange("highSales")}
+            >
+              High Sales
+            </button>
+            <button
+              className={activeFilter === "lowSales" ? "active" : ""}
+              onClick={() => handleFilterChange("lowSales")}
+            >
+              Low Sales
+            </button>
+            <button
+              className={activeFilter === "lowInventory" ? "active" : ""}
+              onClick={() => handleFilterChange("lowInventory")}
+            >
+              Low Inventory
+            </button>
+
+            <label>
+              Start Date:
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                }}
+              />
+            </label>
+
+            <label>
+              End Date:
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                }}
+              />
+            </label>
+
+            <label>
+              Categories:
+              <Select
+                isMulti
+                options={categoryOptions}
+                value={categoryOptions.filter((option) =>
+                  selectedCategories.includes(option.value)
+                )}
+                onChange={(e) =>
+                  setSelectedCategories(
+                    e.map((option) => option.value as string)
+                  )
+                }
+                className="text-sm"
+              />
+            </label>
+
+            <label>
+              Regions:
+              <Select
+                isMulti
+                options={regionOptions}
+                value={regionOptions.filter((option) =>
+                  selectedRegions.includes(option.value)
+                )}
+                onChange={(e) =>
+                  setSelectedRegions(e.map((option) => option.value as string))
+                }
+                className="text-sm"
+              />
+            </label>
+
+            <label>
+              Threshold:
+              <input
+                id="thresholdvalue"
+                type="number"
+                value={thresholdValue}
+                onChange={handleThresholdChange}
+                min="0"
+              />
+            </label>
+          </div>
         </div>
-      </div>
 
-      <div className="data-table-container">
-        <h2>Sales Data</h2>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th onClick={() => requestSort("product")}>
-                Product{" "}
-                {sortConfig.key === "product" &&
-                  (sortConfig.direction === "ascending" ? "↑" : "↓")}
-              </th>
-              <th onClick={() => requestSort("date")}>
-                Date{" "}
-                {sortConfig.key === "date" &&
-                  (sortConfig.direction === "ascending" ? "↑" : "↓")}
-              </th>
-              <th onClick={() => requestSort("sales")}>
-                Sales ($){" "}
-                {sortConfig.key === "sales" &&
-                  (sortConfig.direction === "ascending" ? "↑" : "↓")}
-              </th>
-              <th onClick={() => requestSort("inventory")}>
-                Inventory{" "}
-                {sortConfig.key === "inventory" &&
-                  (sortConfig.direction === "ascending" ? "↑" : "↓")}
-              </th>
-              <th onClick={() => requestSort("category")}>
-                Category{" "}
-                {sortConfig.key === "category" &&
-                  (sortConfig.direction === "ascending" ? "↑" : "↓")}
-              </th>
-              <th onClick={() => requestSort("region")}>
-                Region{" "}
-                {sortConfig.key === "region" &&
-                  (sortConfig.direction === "ascending" ? "↑" : "↓")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((entry, index) => (
-              <tr
-                key={index}
-                className={entry.sales >= thresholdValue ? "high-sales" : ""}
-              >
-                <td>{entry.product}</td>
-                <td>{entry.date}</td>
-                <td>{entry.sales}</td>
-                <td>{entry.inventory}</td>
-                <td>{entry.category}</td>
-                <td>{entry.region}</td>
+        <div className="data-table-container">
+          <h2>Sales Data</h2>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th onClick={() => requestSort("product")}>
+                  Product{" "}
+                  {sortConfig.key === "product" &&
+                    (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                </th>
+                <th onClick={() => requestSort("date")}>
+                  Date{" "}
+                  {sortConfig.key === "date" &&
+                    (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                </th>
+                <th onClick={() => requestSort("sales")}>
+                  Sales ($){" "}
+                  {sortConfig.key === "sales" &&
+                    (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                </th>
+                <th onClick={() => requestSort("inventory")}>
+                  Inventory{" "}
+                  {sortConfig.key === "inventory" &&
+                    (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                </th>
+                <th onClick={() => requestSort("category")}>
+                  Category{" "}
+                  {sortConfig.key === "category" &&
+                    (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                </th>
+                <th onClick={() => requestSort("region")}>
+                  Region{" "}
+                  {sortConfig.key === "region" &&
+                    (sortConfig.direction === "ascending" ? "↑" : "↓")}
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filteredData.map((entry, index) => (
+                <tr
+                  key={index}
+                  className={entry.sales >= thresholdValue ? "high-sales" : ""}
+                >
+                  <td>{entry.product}</td>
+                  <td>{entry.date}</td>
+                  <td>{entry.sales}</td>
+                  <td>{entry.inventory}</td>
+                  <td>{entry.category}</td>
+                  <td>{entry.region}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-      <div className="export-button-container">
-        <button onClick={handleExportJSON}>Export to Json</button>
-        <button onClick={handleExportCSV}>Export to csv</button>
+        <div className="export-button-container">
+          <button onClick={handleExportJSON}>Export to Json</button>
+          <button onClick={handleExportCSV}>Export to csv</button>
+        </div>
       </div>
     </div>
   );

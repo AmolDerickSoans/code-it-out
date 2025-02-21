@@ -77,6 +77,14 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0 25px;
+
+  input{
+    padding: 10px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+  }
 }
 
 .filter-controls button {
@@ -439,7 +447,7 @@ body {
 
 .metric span:last-child {
   font-weight: bold;
-  color: #007bff; /* Bootstrap primary color */
+  color: #007bff; 
 }
 
 /* Responsive Design */
@@ -459,4 +467,8 @@ body {
   .metric span {
       font-size: 1em;
   }
+}
+
+.dow-container{
+  height: 90vh;
 }
