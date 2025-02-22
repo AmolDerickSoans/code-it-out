@@ -1,9 +1,21 @@
-
-.sales-dashboard {
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+  }
+  
+  *, *::before, *::after {
+    box-sizing: inherit;
+  }
+  
+  .sales-dashboard {
     max-width: 1200px;
+    width: 100%;
     margin: 0 auto;
     padding: 20px;
-    box-sizing: border-box;
   }
   
   .summary-section {
@@ -96,7 +108,6 @@
   .export-buttons button:hover {
     background-color: #0056b3;
   }
-  
   .filters {
     display: flex;
     flex-wrap: wrap;
@@ -178,7 +189,6 @@
     margin: 4px 0;
     color: #333;
   }
-  
   .data-table-container {
     margin-top: 30px;
     overflow-x: auto;
@@ -200,7 +210,7 @@
   .data-table th {
     background-color: #f4f4f4;
   }
-  
+ 
   .charts-section {
     margin: 40px 0;
     padding: 20px;
@@ -213,7 +223,7 @@
   .chart-container {
     margin-bottom: 40px;
     padding: 20px;
-    background: #fff;
+    background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
@@ -239,7 +249,7 @@
     border-radius: 4px;
     padding: 5px;
   }
-  
+
   @media (max-width: 768px) {
     .summary-section {
       flex-direction: column;
