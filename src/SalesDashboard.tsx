@@ -78,9 +78,7 @@ const SalesDashboard = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(data);
-   // Initialize with original data
 
-  // const [data, setData] = useState<DataItem[]>([]);
   const handleDateRangeChange = () => {
     setFilteredSalesData(
       data.filter(item => {
@@ -100,7 +98,6 @@ const SalesDashboard = () => {
       );
     };
   
-    // Handle Region Change (Multi-select)
     const handleRegionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = event.target.value;
       setSelectedRegions(prevState =>
@@ -110,26 +107,22 @@ const SalesDashboard = () => {
       );
     };
   
-    // Apply All Filters
     const applyFilters = () => {
 
       if (!startDate && !endDate && selectedCategories.length === 0 && selectedRegions.length === 0) {
         setFilteredSalesData([]);
         return;
       }
-      
+
       const filtered = data.filter(item => {
-        // Date range filter
         const matchesDate = (startDate && endDate)
           ? new Date(item.date) >= new Date(startDate) && new Date(item.date) <= new Date(endDate)
           : true;
-  
-        // Category filter
+
         const matchesCategory = selectedCategories.length
           ? selectedCategories.includes(item.category)
           : true;
   
-        // Region filter
         const matchesRegion = selectedRegions.length
           ? selectedRegions.includes(item.region)
           : true;
@@ -181,20 +174,18 @@ const SalesDashboard = () => {
         setSalesPerformance('no-change');
       }
     }
-    setPreviousPeriodSales(totalSales); // Update previous period sales after calculation
+    setPreviousPeriodSales(totalSales); 
   }, [totalSales]);
 
-  // Handle CSV export
+
   const handleExportCSV = () => {
     const formatDate = (date: string | Date ): string => {
       let dateObj: Date
-       // If it's a string, try converting it to a Date object
       if (typeof date === 'string') {
         dateObj = new Date(date);
       } else if (date instanceof Date) {
         dateObj = date;
       } else {
-        // If it's neither a string nor a Date, return an empty string
         return '';
       }
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -202,7 +193,6 @@ const SalesDashboard = () => {
       const year = dateObj.getFullYear();
       return `${month}/${day}/${year}`;
     }
-    // You can use filteredData if you want to export only filtered/sorted data
     const exportData = filteredData.map(item => ({
       product: item.product,
       date: formatDate(item.date),
@@ -215,14 +205,63 @@ const SalesDashboard = () => {
     const headers = Object.keys(exportData[0]).join(',');
     const rows = exportData.map(row => Object.values(row).join(',')).join('\n');
     const csv = `${headers}\n${rows}`;
-    
-    // Create a download link and trigger download
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = 'sales_data.csv';
     link.click();
   };
+
+  const computeRegionSalesData = (): RegionData[] => {
+    const regionMap: { [key: string]: number } = {};
+    data.forEach(item => {
+      if (regionMap[item.region]) {
+        regionMap[item.region] += item.sales;
+      } else {
+        regionMap[item.region] = item.sales;
+      }
+    });
+    const regionData: RegionData[] = [];
+    Object.keys(regionMap).forEach(region => {
+      regionData.push({ region, sales: regionMap[region] });
+    });
+    return regionData;
+  };
+
+  const getStackedBarData = (): { category: string; [region: string]: number | string }[] => {
+    const result: { category: string; [region: string]: number | string }[] = [];
+    allCategories.forEach(category => {
+      const row: any = { category };
+      allRegions.forEach(region => {
+        row[region] = data
+          .filter(item => item.category === category && item.region === region)
+          .reduce((sum, item) => sum + item.sales, 0);
+      });
+      result.push(row);
+    });
+    return result;
+  };
+
+  const getMonthlyTrendData = (): { month: string; sales: number }[] => {
+    const monthMap: { [key: string]: number } = {};
+    data.forEach(item => {
+      const dateObj = new Date(item.date);
+      const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+      if (monthMap[monthYear]) {
+        monthMap[monthYear] += item.sales;
+      } else {
+        monthMap[monthYear] = item.sales;
+      }
+    });
+    const trendData = Object.keys(monthMap).map(month => ({ month, sales: monthMap[month] }));
+    trendData.sort((a, b) => a.month.localeCompare(b.month));
+    return trendData;
+  };
+
+  const regionData = computeRegionSalesData();
+  const stackedBarData = getStackedBarData();
+  const monthlyTrendData = getMonthlyTrendData();
 
   const deleteEntry = (id: number) => {
     const newData = data.filter((item) => item.id !== id);
@@ -255,8 +294,7 @@ const SalesDashboard = () => {
       const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
       setData([...data, {...formData, sales: salesValue, inventory: inventoryValue, id: newId}]);
     }
-    
-    // Reset form after submission
+ 
     setFormData({
       product: '',
       date: '',
@@ -278,13 +316,6 @@ const SalesDashboard = () => {
     });
     setEditingId(item.id);
   };
-
-  // const handleChange = (e) => {
-  //   setFormData({
-  //     ...formData,
-  //     [e.target.name]: e.target.value
-  //   });
-  // };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -329,27 +360,6 @@ const SalesDashboard = () => {
     }));
   };
 
-  // const getRegionData = () => {
-  //   const regionMap: { [key: string]: number } = {};
-  //   const regionData: RegionData[] = [];
-    
-  //   data.forEach(item => {
-  //     if (regionMap[item.region]) {
-  //       regionMap[item.region] += item.sales;
-  //     } else {
-  //       regionMap[item.region] = item.sales;               
-  //     }
-  //   });      
-  //   Object.keys(regionMap).forEach(region => {
-  //     regionData.push({
-  //       region,
-  //       sales: regionMap[region],
-  //     })
-  //   })  
-  //   return regionData;
-  // };
-
-  // Apply filtering
   let filteredData = data;
   
   if (activeFilter !== 'all') {
@@ -540,143 +550,132 @@ const SalesDashboard = () => {
       )}
     </form>
 
-      {/* Data Table */}
-      <div className="data-table-container">
-        <h2>Sales Data</h2>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th onClick={() => requestSort('product')}>
-                Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('date')}>
-                Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('sales')}>
-                Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('inventory')}>
-                Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('category')}>
-                Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('region')}>
-                Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            
-            {filteredData.map((entry, index) => (
-              <tr key={index} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
-                <td>{entry.product}</td>
-                <td>{entry.date}</td>
-                <td>{entry.sales}</td>
-                <td>{entry.inventory}</td>
-                <td>{entry.category}</td>
-                <td>{entry.region}</td>
-                <td>
-                  <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
-          
-                  <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
-
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      
-      <div className="summary-section">
-        <div className="summary-item">
-          <h3>Total Sales</h3>
-          <p>${totalSales.toLocaleString()}</p>
-        </div>
-        <div className="summary-item">
-          <h3>Average Sales</h3>
-          <p>${averageSales.toFixed(2)}</p>
-        </div>
-        <div className="summary-item">
-          <h3>Best Selling Product</h3>
-          <p>{bestSellingProduct.product} (${bestSellingProduct.sales})</p>
-        </div>
-        <div className="summary-item">
-          <h3>Best Region</h3>
-          <p>{bestRegion.region} (${bestRegion.sales})</p>
-        </div>
+    <div className="data-table-container">
+      <h2>Sales Data</h2>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th onClick={() => requestSort('product')}>
+              Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('date')}>
+              Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('sales')}>
+              Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('inventory')}>
+              Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('category')}>
+              Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th onClick={() => requestSort('region')}>
+              Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredData.map((entry, index) => (
+            <tr key={index} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
+              <td>{entry.product}</td>
+              <td>{entry.date}</td>
+              <td>{entry.sales}</td>
+              <td>{entry.inventory}</td>
+              <td>{entry.category}</td>
+              <td>{entry.region}</td>
+              <td>
+                <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
         
-        {/* Performance Change Indicator */}
-        <div className="performance-change">
-          <h3 id='salesper'>Sales Performance</h3>
-          <p className={`performance-indicator ${salesPerformance}`}>
-            {salesPerformance === 'increase' && '📈 Sales Increased'}
-            {salesPerformance === 'decrease' && '📉 Sales Decreased'}
-            {salesPerformance === 'no-change' && '📊 No Change'}
-          </p>
+                <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
+
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <div className="summary-section">
+      <div className="summary-item">
+        <h3>Total Sales</h3>
+        <p>${totalSales.toLocaleString()}</p>
+      </div>
+      <div className="summary-item">
+        <h3>Average Sales</h3>
+        <p>${averageSales.toFixed(2)}</p>
+      </div>
+      <div className="summary-item">
+        <h3>Best Selling Product</h3>
+        <p>{bestSellingProduct.product} (${bestSellingProduct.sales})</p>
+      </div>
+      <div className="summary-item">
+        <h3>Best Region</h3>
+        <p>{bestRegion.region} (${bestRegion.sales})</p>
+      </div>
+
+      <div className="performance-change">
+        <h3 id='salesper'>Sales Performance</h3>
+        <p className={`performance-indicator ${salesPerformance}`}>
+          {salesPerformance === 'increase' && '📈 Sales Increased'}
+          {salesPerformance === 'decrease' && '📉 Sales Decreased'}
+          {salesPerformance === 'no-change' && '📊 No Change'}
+        </p>
+      </div>
+    </div>
+    <div className="export-buttons">
+      <button onClick={handleExportCSV}>Export CSV</button>
+    </div>
+    <div className="filters">
+
+    <div className="filter-item">
+      <label>Start Date</label>
+      <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+      <label>End Date</label>
+      <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+      <button onClick={handleDateRangeChange}>Apply Date Range Filter</button>
+    </div>
+
+    <div className="filter-item">
+      <label>Categories</label>
+      {allCategories.map((category) => (
+        <div key={category}>
+          <input
+            type="checkbox"
+            value={category}
+            checked={selectedCategories.includes(category)}
+            onChange={handleCategoryChange}
+          />
+          <label>{category}</label>
         </div>
-      </div>
+      ))}
+    </div>
 
-      <div className="export-buttons">
-        <button onClick={handleExportCSV}>Export CSV</button>
-      </div>
+    <div className="filter-item">
+      <label>Regions</label>
+      {allRegions.map((region) => (
+        <div key={region}>
+          <input
+            type="checkbox"
+            value={region}
+            checked={selectedRegions.includes(region)}
+            onChange={handleRegionChange}
+          />
+          <label>{region}</label>
+        </div>
+      ))}
+    </div>
+  </div>
 
-      <div className="filters">
-  {/* Date range filter */}
-  <div className="filter-item">
-    <label>Start Date</label>
-    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-    <label>End Date</label>
-    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-    <button onClick={handleDateRangeChange}>Apply Date Range Filter</button>
-  </div>
-  
-  {/* Category multi-select filter */}
-  <div className="filter-item">
-    <label>Categories</label>
-    {allCategories.map((category) => (
-      <div key={category}>
-        <input
-          type="checkbox"
-          value={category}
-          checked={selectedCategories.includes(category)}
-          onChange={handleCategoryChange}
-        />
-        <label>{category}</label>
-      </div>
-    ))}
-  </div>
-  
-  {/* Region multi-select filter */}
-  <div className="filter-item">
-    <label>Regions</label>
-    {allRegions.map((region) => (
-      <div key={region}>
-        <input
-          type="checkbox"
-          value={region}
-          checked={selectedRegions.includes(region)}
-          onChange={handleRegionChange}
-        />
-        <label>{region}</label>
-      </div>
-    ))}
-  </div>
-</div>
-
-{/* Visual Filter Builder */}
-<div className="filter-summary">
+  <div className="filter-summary">
   <h4>Applied Filters:</h4>
   <div>
     {startDate && endDate && <p>Date Range: {startDate} to {endDate}</p>}
     {selectedCategories.length > 0 && <p>Categories: {selectedCategories.join(', ')}</p>}
     {selectedRegions.length > 0 && <p>Regions: {selectedRegions.join(', ')}</p>}
   </div>
-</div>
+  </div>
 
-
-      {/* Render filtered data */}
       <div className="data-table-container">
         <h2>Sales Data</h2>
         <table className="data-table">
@@ -760,6 +759,62 @@ const SalesDashboard = () => {
           </ResponsiveContainer>
         </div>
       </div>
+      <div className="charts-section">
+        <h2>Data Visualization Enhancements</h2>
+
+        <div className="chart-container">
+          <h3>Sales by Region</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={regionData}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                dataKey="sales"
+                label
+              >
+                {regionData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-container">
+          <h3>Category/Region Comparison</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={stackedBarData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="category" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {allRegions.map((region, index) => (
+                <Bar key={region} dataKey={region} stackId="a" fill={COLORS[index % COLORS.length]} />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        
+        <div className="chart-container">
+          <h3>Monthly Trend Analysis</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={monthlyTrendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="sales" stroke="#8884d8" activeDot={{ r: 8 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
     </div>
   );
 };
