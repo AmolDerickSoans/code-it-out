@@ -1,0 +1,83 @@
+/* Summary Section */
+.summary-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 20px;
+  }
+  
+  .summary-item {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex-basis: 22%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .summary-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .summary-item h3 {
+    font-size: 1.2rem;
+    color: #495057;
+    margin-bottom: 10px;
+  }
+  
+  .summary-item p {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #343a40;
+    margin: 0;
+  }
+  
+  .performance-change {
+    width: 100%;
+    text-align: center;
+    margin-top: 30px;
+  }
+  
+  .performance-indicator {
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: inline-block;
+    margin-top: 10px;
+  }
+  
+  .performance-indicator.increase {
+    background-color: #28a745;
+    color: white;
+  }
+  
+  .performance-indicator.decrease {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .performance-indicator.no-change {
+    background-color: #6c757d;
+    color: white;
+  }
+  #salesper{
+    color: #dc3545;
+  }
+  
+  /* Responsive Design for Small Screens */
+  @media (max-width: 768px) {
+    .summary-section {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .summary-item {
+      flex-basis: 80%;
+      margin-bottom: 15px;
+    }
+  }
+  

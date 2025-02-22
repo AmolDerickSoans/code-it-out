@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, Cell
 } from 'recharts';
-import './App.css'
+import './SalesDashboard.css'
 
 type SalesData = {
   id: number;
@@ -71,6 +71,48 @@ const SalesDashboard = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
   // const [data, setData] = useState<DataItem[]>([]);
+
+  const getRegionData = () => {
+    const regionMap: { [key: string]: number } = {};
+    const regionData: RegionData[] = [];
+    
+    data.forEach(item => {
+      if (regionMap[item.region]) {
+        regionMap[item.region] += item.sales;
+      } else {
+        regionMap[item.region] = item.sales;               
+      }
+    });      
+    Object.keys(regionMap).forEach(region => {
+      regionData.push({
+        region,
+        sales: regionMap[region],
+      })
+    })  
+    return regionData;
+  };
+
+  const totalSales = data.reduce((acc, curr) => acc + curr.sales, 0);
+  const averageSales = data.length ? totalSales / data.length : 0;
+  const bestSellingProduct = data.reduce((max, curr) => (curr.sales > max.sales ? curr : max), data[0]);
+  const bestRegion = getRegionData().reduce((max, curr) => (curr.sales > max.sales ? curr : max), getRegionData()[0]);
+  const [previousPeriodSales, setPreviousPeriodSales] = useState<number | null>(null);
+  const [salesPerformance, setSalesPerformance] = useState<'increase' | 'decrease' | 'no-change'>('no-change');
+
+  useEffect(() => {
+    if (previousPeriodSales !== null) {
+      if (totalSales > previousPeriodSales) {
+        setSalesPerformance('increase');
+      } else if (totalSales < previousPeriodSales) {
+        setSalesPerformance('decrease');
+      } else {
+        setSalesPerformance('no-change');
+      }
+    }
+    setPreviousPeriodSales(totalSales); // Update previous period sales after calculation
+  }, [totalSales]);
+
+
 
   const deleteEntry = (id: number) => {
     const newData = data.filter((item) => item.id !== id);
@@ -177,25 +219,25 @@ const SalesDashboard = () => {
     }));
   };
 
-  const getRegionData = () => {
-    const regionMap: { [key: string]: number } = {};
-    const regionData: RegionData[] = [];
+  // const getRegionData = () => {
+  //   const regionMap: { [key: string]: number } = {};
+  //   const regionData: RegionData[] = [];
     
-    data.forEach(item => {
-      if (regionMap[item.region]) {
-        regionMap[item.region] += item.sales;
-      } else {
-        regionMap[item.region] = item.sales;               
-      }
-    });      
-    Object.keys(regionMap).forEach(region => {
-      regionData.push({
-        region,
-        sales: regionMap[region],
-      })
-    })  
-    return regionData;
-  };
+  //   data.forEach(item => {
+  //     if (regionMap[item.region]) {
+  //       regionMap[item.region] += item.sales;
+  //     } else {
+  //       regionMap[item.region] = item.sales;               
+  //     }
+  //   });      
+  //   Object.keys(regionMap).forEach(region => {
+  //     regionData.push({
+  //       region,
+  //       sales: regionMap[region],
+  //     })
+  //   })  
+  //   return regionData;
+  // };
 
   // Apply filtering
   let filteredData = data;
@@ -437,6 +479,35 @@ const SalesDashboard = () => {
         </table>
       </div>
       
+      <div className="summary-section">
+        <div className="summary-item">
+          <h3>Total Sales</h3>
+          <p>${totalSales.toLocaleString()}</p>
+        </div>
+        <div className="summary-item">
+          <h3>Average Sales</h3>
+          <p>${averageSales.toFixed(2)}</p>
+        </div>
+        <div className="summary-item">
+          <h3>Best Selling Product</h3>
+          <p>{bestSellingProduct.product} (${bestSellingProduct.sales})</p>
+        </div>
+        <div className="summary-item">
+          <h3>Best Region</h3>
+          <p>{bestRegion.region} (${bestRegion.sales})</p>
+        </div>
+        
+        {/* Performance Change Indicator */}
+        <div className="performance-change">
+          <h3 id='salesper'>Sales Performance</h3>
+          <p className={`performance-indicator ${salesPerformance}`}>
+            {salesPerformance === 'increase' && '📈 Sales Increased'}
+            {salesPerformance === 'decrease' && '📉 Sales Decreased'}
+            {salesPerformance === 'no-change' && '📊 No Change'}
+          </p>
+        </div>
+      </div>
+
       <div className="charts-section">
         <h2>Data Visualization</h2>
         
