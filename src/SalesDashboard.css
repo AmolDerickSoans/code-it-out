@@ -1,4 +1,4 @@
-/* Summary Section */
+/* ---------------- Summary Section ---------------- */
 .summary-section {
     display: flex;
     flex-wrap: wrap;
@@ -52,29 +52,161 @@
   
   .performance-indicator.increase {
     background-color: #28a745;
-    color: white;
+    color: #fff;
   }
   
   .performance-indicator.decrease {
     background-color: #dc3545;
-    color: white;
+    color: #fff;
   }
   
   .performance-indicator.no-change {
     background-color: #6c757d;
-    color: white;
+    color: #fff;
   }
-  #salesper{
+  
+  #salesper {
     color: #dc3545;
   }
   
-  /* Responsive Design for Small Screens */
+  /* ---------------- Export Buttons ---------------- */
+  .export-buttons {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .export-buttons button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .export-buttons button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* ---------------- Filters Section ---------------- */
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .filter-item {
+    flex: 1 1 280px;
+    padding: 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Ensure labels are visible */
+  .filter-item label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  /* Date, text, and number input styling */
+  .filter-item input[type="date"],
+  .filter-item input[type="text"],
+  .filter-item input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  /* Checkbox styling */
+  .filter-item input[type="checkbox"] {
+    margin-right: 5px;
+  }
+  
+  /* Container for each checkbox item */
+  .filter-item div {
+    margin-bottom: 5px;
+  }
+  
+  /* Button styling within filters */
+  .filter-item button {
+    padding: 8px 12px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .filter-item button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* ---------------- Visual Filter Builder ---------------- */
+  .filter-summary {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f2f2f2;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+  }
+  
+  .filter-summary h4 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .filter-summary p {
+    font-size: 14px;
+    margin: 4px 0;
+    color: #333;
+  }
+  
+  /* ---------------- Data Table ---------------- */
+  .data-table-container {
+    margin-top: 30px;
+  }
+  
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    color: #333;
+  }
+  
+  .data-table th {
+    background-color: #f4f4f4;
+  }
+  
+  /* ---------------- Responsive Design ---------------- */
   @media (max-width: 768px) {
     .summary-section {
       flex-direction: column;
       align-items: center;
     }
-  
+    
     .summary-item {
       flex-basis: 80%;
       margin-bottom: 15px;

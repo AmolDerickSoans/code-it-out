@@ -50,6 +50,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 
 type SortKey = 'product' | 'date' | 'sales' | 'inventory' | 'category' | 'region' | null;
 
+const allCategories = ["Electronics", "Furniture", "Appliances", "Clothing", "Books"];
+const allRegions = ["North", "South", "East", "West"];
+
 type RegionData = {
   region: string;
   sales: number;
@@ -70,7 +73,76 @@ const SalesDashboard = () => {
   const [sortConfig, setSortConfig] = useState<{ key: SortKey, direction: 'ascending' | 'descending'}>({key: null, direction: 'ascending'});
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(data);
+   // Initialize with original data
+
   // const [data, setData] = useState<DataItem[]>([]);
+  const handleDateRangeChange = () => {
+    setFilteredSalesData(
+      data.filter(item => {
+        const itemDate = new Date(item.date);
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        return itemDate >= start && itemDate <= end;
+      })
+    );}
+
+    const handleCategoryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setSelectedCategories(prevState =>
+        prevState.includes(value)
+          ? prevState.filter(category => category !== value)
+          : [...prevState, value]
+      );
+    };
+  
+    // Handle Region Change (Multi-select)
+    const handleRegionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setSelectedRegions(prevState =>
+        prevState.includes(value)
+          ? prevState.filter(region => region !== value)
+          : [...prevState, value]
+      );
+    };
+  
+    // Apply All Filters
+    const applyFilters = () => {
+
+      if (!startDate && !endDate && selectedCategories.length === 0 && selectedRegions.length === 0) {
+        setFilteredSalesData([]);
+        return;
+      }
+      
+      const filtered = data.filter(item => {
+        // Date range filter
+        const matchesDate = (startDate && endDate)
+          ? new Date(item.date) >= new Date(startDate) && new Date(item.date) <= new Date(endDate)
+          : true;
+  
+        // Category filter
+        const matchesCategory = selectedCategories.length
+          ? selectedCategories.includes(item.category)
+          : true;
+  
+        // Region filter
+        const matchesRegion = selectedRegions.length
+          ? selectedRegions.includes(item.region)
+          : true;
+  
+        return matchesDate && matchesCategory && matchesRegion;
+      });
+  
+      setFilteredSalesData(filtered);
+    };
+   
+    useEffect(() => {
+      applyFilters();
+    }, [data, startDate, endDate, selectedCategories, selectedRegions]);    
 
   const getRegionData = () => {
     const regionMap: { [key: string]: number } = {};
@@ -112,7 +184,45 @@ const SalesDashboard = () => {
     setPreviousPeriodSales(totalSales); // Update previous period sales after calculation
   }, [totalSales]);
 
+  // Handle CSV export
+  const handleExportCSV = () => {
+    const formatDate = (date: string | Date ): string => {
+      let dateObj: Date
+       // If it's a string, try converting it to a Date object
+      if (typeof date === 'string') {
+        dateObj = new Date(date);
+      } else if (date instanceof Date) {
+        dateObj = date;
+      } else {
+        // If it's neither a string nor a Date, return an empty string
+        return '';
+      }
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const year = dateObj.getFullYear();
+      return `${month}/${day}/${year}`;
+    }
+    // You can use filteredData if you want to export only filtered/sorted data
+    const exportData = filteredData.map(item => ({
+      product: item.product,
+      date: formatDate(item.date),
+      sales: item.sales,
+      inventory: item.inventory,
+      category: item.category,
+      region: item.region,
+    }));
 
+    const headers = Object.keys(exportData[0]).join(',');
+    const rows = exportData.map(row => Object.values(row).join(',')).join('\n');
+    const csv = `${headers}\n${rows}`;
+    
+    // Create a download link and trigger download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'sales_data.csv';
+    link.click();
+  };
 
   const deleteEntry = (id: number) => {
     const newData = data.filter((item) => item.id !== id);
@@ -507,6 +617,94 @@ const SalesDashboard = () => {
           </p>
         </div>
       </div>
+
+      <div className="export-buttons">
+        <button onClick={handleExportCSV}>Export CSV</button>
+      </div>
+
+      <div className="filters">
+  {/* Date range filter */}
+  <div className="filter-item">
+    <label>Start Date</label>
+    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+    <label>End Date</label>
+    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+    <button onClick={handleDateRangeChange}>Apply Date Range Filter</button>
+  </div>
+  
+  {/* Category multi-select filter */}
+  <div className="filter-item">
+    <label>Categories</label>
+    {allCategories.map((category) => (
+      <div key={category}>
+        <input
+          type="checkbox"
+          value={category}
+          checked={selectedCategories.includes(category)}
+          onChange={handleCategoryChange}
+        />
+        <label>{category}</label>
+      </div>
+    ))}
+  </div>
+  
+  {/* Region multi-select filter */}
+  <div className="filter-item">
+    <label>Regions</label>
+    {allRegions.map((region) => (
+      <div key={region}>
+        <input
+          type="checkbox"
+          value={region}
+          checked={selectedRegions.includes(region)}
+          onChange={handleRegionChange}
+        />
+        <label>{region}</label>
+      </div>
+    ))}
+  </div>
+</div>
+
+{/* Visual Filter Builder */}
+<div className="filter-summary">
+  <h4>Applied Filters:</h4>
+  <div>
+    {startDate && endDate && <p>Date Range: {startDate} to {endDate}</p>}
+    {selectedCategories.length > 0 && <p>Categories: {selectedCategories.join(', ')}</p>}
+    {selectedRegions.length > 0 && <p>Regions: {selectedRegions.join(', ')}</p>}
+  </div>
+</div>
+
+
+      {/* Render filtered data */}
+      <div className="data-table-container">
+        <h2>Sales Data</h2>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Date</th>
+              <th>Sales</th>
+              <th>Inventory</th>
+              <th>Category</th>
+              <th>Region</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredSalesData.map((entry, index) => (
+              <tr key={index}>
+                <td>{entry.product}</td>
+                <td>{entry.date}</td>
+                <td>{entry.sales}</td>
+                <td>{entry.inventory}</td>
+                <td>{entry.category}</td>
+                <td>{entry.region}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
 
       <div className="charts-section">
         <h2>Data Visualization</h2>
