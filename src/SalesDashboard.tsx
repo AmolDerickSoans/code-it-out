@@ -5,23 +5,25 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, Cell
 } from 'recharts';
-import SummaryStats from './SummaryStats.tsx';
+import SummaryStats from './components/SummaryStats.tsx';
+import DownloadFile from './components/DownloadFile.tsx';
+import RegionPieChart from './components/RegionPieChart.tsx';
+import CategorySalesBarGraph from './components/CategorySalesBarGraph.tsx';
+import LineMonthlySales from './components/LineMonthlySales.tsx';
+import LineDailySales from './components/LineDailySales.tsx';
 
 
 const initialData = [
-  { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
-  { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
-  { id: 3, product: "Ergonomic Chair", date: "2024-01-03", sales: 2100, inventory: 18, category: "Furniture", region: "West" },
+  { id: 1, product: "Laptop XZ-2000", date: "2024-10-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
+  { id: 2, product: "Smart Watch V3", date: "2024-06-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
+  { id: 3, product: "Ergonomic Chair", date: "2024-11-03", sales: 2100, inventory: 18, category: "Furniture", region: "West" },
   { id: 4, product: "Wireless Earbuds", date: "2024-01-04", sales: 750, inventory: 55, category: "Electronics", region: "South" },
-  { id: 5, product: "Office Desk", date: "2024-01-05", sales: 1200, inventory: 24, category: "Furniture", region: "North" },
+  { id: 5, product: "Office Desk", date: "2024-02-05", sales: 1200, inventory: 24, category: "Furniture", region: "North" },
   { id: 6, product: "Coffee Maker", date: "2024-01-06", sales: 600, inventory: 38, category: "Appliances", region: "East" },
-  { id: 7, product: "Bluetooth Speaker", date: "2024-01-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
-  { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
+  { id: 7, product: "Bluetooth Speaker", date: "2024-02-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
+  { id: 8, product: "Standing Desk", date: "2024-03-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
 ];
 
-
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const SalesDashboard = () => {
   const [data, setData] = useState(initialData);
@@ -121,49 +123,6 @@ const SalesDashboard = () => {
     setSortConfig({ key, direction });
   };
 
-  const lineData = data.map((entry, index) => ({
-    name: `Day ${index + 1}`,
-    value: entry.sales
-  }));
-
-  const getCategoryData = () => {
-    const categoryMap = {};
-    data.forEach(item => {
-      if (categoryMap[item.category]) {
-        categoryMap[item.category] += item.sales;
-      } else {
-        categoryMap[item.category] = item.sales;
-      }
-    });
-    
-    return Object.keys(categoryMap).map(category => ({
-      name: category,
-      value: categoryMap[category]
-    }));
-  };
-
-  const getRegionData = () => {
-
-    const regionMap = {};
-  
-    data.forEach(item => {
-      if (regionMap[item.region]) {
-        regionMap[item.region] += item.sales;
-      } else {
-        regionMap[item.region] = item.sales;
-      }
-    });
-  
-    const regionData = Object.keys(regionMap).map(region => ({
-      name: region,
-      value: regionMap[region],
-    }));
-  
-    return regionData;
-
-  };
-  
-
   // Apply filtering
   let filteredData = data;
   
@@ -209,50 +168,11 @@ const SalesDashboard = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [salesFilter, setSalesFilter] = useState<number>(0);
 
-  // Sorting function
   const sortedData = [...data].sort((a, b) =>
     sortOrder === "asc" ? a.sales - b.sales : b.sales - a.sales
   );
-
-  // Filtering function
-  const filteredData1 = sortedData.filter((item) => item.sales >= salesFilter);
-
-  // Export Data as CSV (All Columns)
-  const exportToCSV = () => {
-    const headers = Object.keys(initialData[0]).join(",") + "\n";
-    const csvRows = filteredData1
-      .map((item) =>
-        Object.values(item)
-          .map((value) => `"${value}"`)
-          .join(",")
-      )
-      .join("\n");
-
-    const csvContent = headers + csvRows;
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "filtered_sales_data.csv";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Export Data as JSON (All Columns)
-  const exportToJSON = () => {
-    const jsonStr = JSON.stringify(filteredData1, null, 2);
-    const blob = new Blob([jsonStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "filtered_sales_data.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const filteredDataForDownload = sortedData.filter((item) => item.sales >= salesFilter);
+  
 
   return (
     <div className="sales-dashboard">
@@ -459,60 +379,13 @@ const SalesDashboard = () => {
       
       <div className="charts-section">
         <h2>Data Visualization</h2>
-        
-        <div className="chart-container">
-          <h3>Daily Sales Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="value" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Sales by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getCategoryData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Sales by Region</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={getRegionData()}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <LineDailySales data={data} />
+        <LineMonthlySales data={data} />
+        <CategorySalesBarGraph data={data} />    
+        <RegionPieChart data={data} />
 
         <div>
-      <SummaryStats data={data} prevData={prevData}/>
+      <SummaryStats data={data} prevData={prevData} />
     </div>
     
     <div className="dashboard-container">
@@ -533,11 +406,7 @@ const SalesDashboard = () => {
         />
       </div>
 
-      {/* Export Buttons */}
-      <div className="export-buttons">
-        <button onClick={exportToCSV}>Export as CSV</button>
-        <button onClick={exportToJSON}>Export as JSON</button>
-      </div>
+      <DownloadFile filteredData={filteredDataForDownload} />
     </div>
     
       </div>

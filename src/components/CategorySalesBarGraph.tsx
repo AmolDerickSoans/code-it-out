@@ -1,0 +1,67 @@
+import React, { useMemo } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+
+const getRegionColor = (region) => {
+  const colorMap = {
+    North: "#8884d8",
+    South: "#82ca9d",
+    East: "#ffc658",
+    West: "#ff7300",
+  };
+  return colorMap[region] || "#ccc";
+};
+
+const CategorySalesBarGraph = ({ data = [] }) => {
+  // Get unique regions
+  const regions = useMemo(() => {
+    return Array.from(new Set(data.map((item) => item.region)));
+  }, [data]);
+
+  // Memoize category-region sales aggregation
+  const categoryRegionData = useMemo(() => {
+    const categoryMap = {};
+
+    data.forEach((item) => {
+      if (!categoryMap[item.category]) {
+        categoryMap[item.category] = {};
+      }
+      categoryMap[item.category][item.region] =
+        (categoryMap[item.category][item.region] || 0) + item.sales;
+    });
+
+    return Object.keys(categoryMap).map((category) => {
+      const categoryEntry = { name: category };
+      Object.keys(categoryMap[category]).forEach((region) => {
+        categoryEntry[region] = categoryMap[category][region];
+      });
+      return categoryEntry;
+    });
+  }, [data]); // Runs only when `data` changes
+
+  return (
+    <div className="chart-container">
+      <h3>Sales by Category</h3>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={categoryRegionData}>
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          {regions.map((region) => (
+            <Bar key={region} dataKey={region} stackId="a" fill={getRegionColor(region)} />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default React.memo(CategorySalesBarGraph);
