@@ -4,8 +4,38 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, Cell
 } from 'recharts';
+import './App.css'
 
-const initialData = [
+type SalesData = {
+  id: number;
+  product: string;
+  date: string;
+  sales: number;
+  inventory: number;
+  category: string;
+  region: string;
+};
+
+type FormData = {
+  product: string;
+  date: string;
+  sales: string;
+  inventory: string;
+  category: string;
+  region: string;
+};
+
+interface DataItem {
+  product: string;
+  date: string;
+  sales: number;
+  inventory: number;
+  category: string;
+  region: string;
+  id: number;
+}
+
+const initialData: SalesData[] = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
   { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
   { id: 3, product: "Ergonomic Chair", date: "2024-01-03", sales: 2100, inventory: 18, category: "Furniture", region: "West" },
@@ -18,9 +48,16 @@ const initialData = [
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
+type SortKey = 'product' | 'date' | 'sales' | 'inventory' | 'category' | 'region' | null;
+
+type RegionData = {
+  region: string;
+  sales: number;
+};
+
 const SalesDashboard = () => {
-  const [data, setData] = useState(initialData);
-  const [formData, setFormData] = useState({
+  const [data, setData] = useState<SalesData[]>(initialData);
+  const [formData, setFormData] = useState<FormData>({
     product: '',
     date: '',
     sales: '',
@@ -28,18 +65,27 @@ const SalesDashboard = () => {
     category: '',
     region: ''
   });
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey, direction: 'ascending' | 'descending'}>({key: null, direction: 'ascending'});
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
+  // const [data, setData] = useState<DataItem[]>([]);
 
-  const deleteEntry = (index) => {
-    const newData = data.filter((_, i) => i !== index);
+  const deleteEntry = (id: number) => {
+    const newData = data.filter((item) => item.id !== id);
     setData(newData);
   };
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     const salesValue = Number(formData.sales);
@@ -58,6 +104,7 @@ const SalesDashboard = () => {
       setData([...data, {...formData, sales: salesValue, inventory: inventoryValue, id: newId}]);
     }
     
+    // Reset form after submission
     setFormData({
       product: '',
       date: '',
@@ -68,7 +115,7 @@ const SalesDashboard = () => {
     });
   };
 
-  const handleEdit = (item) => {
+  const handleEdit = (item: SalesData) => {
     setFormData({
       product: item.product,
       date: item.date,
@@ -80,27 +127,27 @@ const SalesDashboard = () => {
     setEditingId(item.id);
   };
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  // const handleChange = (e) => {
+  //   setFormData({
+  //     ...formData,
+  //     [e.target.name]: e.target.value
+  //   });
+  // };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterChange = (filter) => {
+  const handleFilterChange = (filter: 'all' | 'highSales' | 'lowSales' | 'lowInventory') => {
     setActiveFilter(filter);
   };
 
-  const handleThresholdChange = (e) => {
+  const handleThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setThresholdValue(Number(e.target.value));
   };
 
-  const requestSort = (key) => {
-    let direction = 'ascending';
+  const requestSort = (key: SortKey) => {
+    let direction: 'ascending' | 'descending' = 'ascending';;
     
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
@@ -115,7 +162,7 @@ const SalesDashboard = () => {
   }));
 
   const getCategoryData = () => {
-    const categoryMap = {};
+    const categoryMap: { [key: string]: number} = {};
     data.forEach(item => {
       if (categoryMap[item.category]) {
         categoryMap[item.category] += item.sales;
@@ -131,17 +178,22 @@ const SalesDashboard = () => {
   };
 
   const getRegionData = () => {
-    const regionData = [];
-    const regionMap = {};
+    const regionMap: { [key: string]: number } = {};
+    const regionData: RegionData[] = [];
     
     data.forEach(item => {
       if (regionMap[item.region]) {
         regionMap[item.region] += item.sales;
       } else {
-        regionMap[item.region] = item.sales;
+        regionMap[item.region] = item.sales;               
       }
-    });
-    
+    });      
+    Object.keys(regionMap).forEach(region => {
+      regionData.push({
+        region,
+        sales: regionMap[region],
+      })
+    })  
     return regionData;
   };
 
@@ -168,15 +220,17 @@ const SalesDashboard = () => {
   
   if (sortConfig.key) {
     filteredData.sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
+      const key = sortConfig.key as keyof typeof a;
+      if (a[key] < b[key]) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
+      if (a[key] > b[key]) {
         return sortConfig.direction === 'ascending' ? 1 : -1;
       }
       return 0;
     });
   }
+
 
   return (
     <div className="sales-dashboard">
@@ -231,108 +285,108 @@ const SalesDashboard = () => {
       </div>
       
       <form onSubmit={handleSubmit} className="data-form">
-        <h2>{editingId ? 'Edit Entry' : 'Add New Entry'}</h2>
-        
-        <div className="form-row">
-          <div className="form-group">
-            <label>Product</label>
-            <input 
-              type="text" 
-              name="product" 
-              value={formData.product} 
-              onChange={handleChange} 
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Date</label>
-            <input 
-              type="date" 
-              name="date" 
-              value={formData.date} 
-              onChange={handleChange} 
-              required
-            />
-          </div>
+      <h2>{editingId ? 'Edit Entry' : 'Add New Entry'}</h2>
+      
+      <div className="form-row">
+        <div className="form-group">
+          <label>Product</label>
+          <input 
+            type="text" 
+            name="product" 
+            value={formData.product} 
+            onChange={handleChange} 
+            required
+          />
         </div>
         
-        <div className="form-row">
-          <div className="form-group">
-            <label>Sales ($)</label>
-            <input 
-              type="number" 
-              name="sales" 
-              value={formData.sales} 
-              onChange={handleChange} 
-              required
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Inventory</label>
-            <input 
-              type="number" 
-              name="inventory" 
-              value={formData.inventory} 
-              onChange={handleChange} 
-              required
-            />
-          </div>
+        <div className="form-group">
+          <label>Date</label>
+          <input 
+            type="date" 
+            name="date" 
+            value={formData.date} 
+            onChange={handleChange} 
+            required
+          />
+        </div>
+      </div>
+      
+      <div className="form-row">
+        <div className="form-group">
+          <label>Sales ($)</label>
+          <input 
+            type="number" 
+            name="sales" 
+            value={formData.sales} 
+            onChange={handleChange} 
+            required
+          />
         </div>
         
-        <div className="form-row">
-          <div className="form-group">
-            <label>Category</label>
-            <select 
-              name="category" 
-              value={formData.category} 
-              onChange={handleChange} 
-              required
-            >
-              <option value="">Select a Category</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Furniture">Furniture</option>
-              <option value="Appliances">Appliances</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Books">Books</option>
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label>Region</label>
-            <select 
-              name="region" 
-              value={formData.region} 
-              onChange={handleChange} 
-              required
-            >
-              <option value="">Select a Region</option>
-              <option value="North">North</option>
-              <option value="South">South</option>
-              <option value="East">East</option>
-              <option value="West">West</option>
-            </select>
-          </div>
+        <div className="form-group">
+          <label>Inventory</label>
+          <input 
+            type="number" 
+            name="inventory" 
+            value={formData.inventory} 
+            onChange={handleChange} 
+            required
+          />
+        </div>
+      </div>
+      
+      <div className="form-row">
+        <div className="form-group">
+          <label>Category</label>
+          <select 
+            name="category" 
+            value={formData.category} 
+            onChange={handleChange} 
+            required
+          >
+            <option value="">Select a Category</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Furniture">Furniture</option>
+            <option value="Appliances">Appliances</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Books">Books</option>
+          </select>
         </div>
         
-        <button type="submit">{editingId ? 'Update Entry' : 'Add Entry'}</button>
-        {editingId && (
-          <button type="button" onClick={() => {
-            setEditingId(null);
-            setFormData({
-              product: '',
-              date: '',
-              sales: '',
-              inventory: '',
-              category: '',
-              region: ''
-            });
-          }}>
-            Cancel
-          </button>
-        )}
-      </form>
+        <div className="form-group">
+          <label>Region</label>
+          <select 
+            name="region" 
+            value={formData.region} 
+            onChange={handleChange} 
+            required
+          >
+            <option value="">Select a Region</option>
+            <option value="North">North</option>
+            <option value="South">South</option>
+            <option value="East">East</option>
+            <option value="West">West</option>
+          </select>
+        </div>
+      </div>
+      
+      <button type="submit">{editingId ? 'Update Entry' : 'Add Entry'}</button>
+      {editingId && (
+        <button type="button" onClick={() => {
+          setEditingId(null);
+          setFormData({
+            product: '',
+            date: '',
+            sales: '',
+            inventory: '',
+            category: '',
+            region: ''
+          });
+        }}>
+          Cancel
+        </button>
+      )}
+    </form>
 
       {/* Data Table */}
       <div className="data-table-container">
@@ -374,7 +428,8 @@ const SalesDashboard = () => {
                 <td>
                   <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
           
-                  <button className="delete-btn" onClick={() => deleteEntry(index)}>Delete</button>
+                  <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
+
                 </td>
               </tr>
             ))}
@@ -423,10 +478,10 @@ const SalesDashboard = () => {
                 cy="50%"
                 outerRadius={100}
                 fill="#8884d8"
-                dataKey="value"
+                dataKey="sales"
                 label
               >
-                {data.map((entry, index) => (
+                {getRegionData().map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -436,7 +491,6 @@ const SalesDashboard = () => {
           </ResponsiveContainer>
         </div>
       </div>
-  
     </div>
   );
 };
