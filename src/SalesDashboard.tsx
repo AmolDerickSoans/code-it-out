@@ -706,60 +706,6 @@ const SalesDashboard = () => {
 
 
       <div className="charts-section">
-        <h2>Data Visualization</h2>
-        
-        <div className="chart-container">
-          <h3>Daily Sales Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="value" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Sales by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getCategoryData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Sales by Region</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={getRegionData()}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="sales"
-                label
-              >
-                {getRegionData().map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-      <div className="charts-section">
         <h2>Data Visualization Enhancements</h2>
 
         <div className="chart-container">
