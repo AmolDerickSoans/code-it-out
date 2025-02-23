@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   LineChart, Line, BarChart, Bar, PieChart, Pie, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
@@ -19,7 +19,12 @@ const initialData = [
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const SalesDashboard = () => {
-  const [data, setData] = useState(initialData);
+  const loadDataFromLocalStorage = () => {
+    const savedData = localStorage.getItem('salesData');
+    return savedData ? JSON.parse(savedData) : initialData;
+  };
+
+  const [data, setData] = useState(loadDataFromLocalStorage);
   const [formData, setFormData] = useState({
     product: '',
     date: '',
@@ -34,28 +39,34 @@ const SalesDashboard = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
 
-  const deleteEntry = (index) => {
-    const newData = data.filter((_, i) => i !== index);
+  useEffect(() => {
+    localStorage.setItem('salesData', JSON.stringify(data));
+  }, [data]);
+
+  const deleteEntry = (id) => {
+    const newData = data.filter(item => item.id !== id);
     setData(newData);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     const salesValue = Number(formData.sales);
     const inventoryValue = Number(formData.inventory);
     
+    if (salesValue < 0 || inventoryValue < 0) {
+      alert("Sales and Inventory must be non-negative.");
+      return;
+    }
+
     if (editingId) {
       const updatedData = data.map(item => 
-        item.id === editingId ? 
-        {...formData, sales: salesValue, inventory: inventoryValue, id: editingId} : 
-        item
+        item.id === editingId ? { ...formData, sales: salesValue, inventory: inventoryValue, id: editingId } : item
       );
       setData(updatedData);
       setEditingId(null);
     } else {
       const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
-      setData([...data, {...formData, sales: salesValue, inventory: inventoryValue, id: newId}]);
+      setData([...data, { ...formData, sales: salesValue, inventory: inventoryValue, id: newId }]);
     }
     
     setFormData({
@@ -101,63 +112,78 @@ const SalesDashboard = () => {
 
   const requestSort = (key) => {
     let direction = 'ascending';
-    
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
-    
     setSortConfig({ key, direction });
   };
 
-  const lineData = data.map((entry, index) => ({
-    name: `Day ${index + 1}`,
+  const lineData = useMemo(() => data.map(entry => ({
+    name: entry.date,
     value: entry.sales
-  }));
+  })), [data]);
 
-  const getCategoryData = () => {
+  const getTopSellingProducts = useMemo(() => {
+    const productMap = {};
+    data.forEach(item => {
+      productMap[item.product] = (productMap[item.product] || 0) + item.sales;
+    });
+    return Object.entries(productMap)
+      .map(([product, totalSales]) => ({ product, totalSales }))
+      .sort((a, b) => b.totalSales - a.totalSales)
+      .slice(0, 5); // Get top 5 products
+  }, [data]);
+
+  // New Product Performance Analysis feature
+  const getProductPerformanceAnalysis = useMemo(() => {
+    const performanceMap = {};
+    data.forEach(item => {
+      if (!performanceMap[item.product]) {
+        performanceMap[item.product] = { totalSales: 0, count: 0 };
+      }
+      performanceMap[item.product].totalSales += item.sales;
+      performanceMap[item.product].count += 1;
+    });
+    return Object.entries(performanceMap).map(([product, performance]) => ({
+      product,
+      averageSales: (performance.totalSales / performance.count).toFixed(2)
+    }));
+  }, [data]);
+
+  const getCategoryData = useMemo(() => {
     const categoryMap = {};
     data.forEach(item => {
-      if (categoryMap[item.category]) {
-        categoryMap[item.category] += item.sales;
-      } else {
-        categoryMap[item.category] = item.sales;
-      }
+      categoryMap[item.category] = (categoryMap[item.category] || 0) + item.sales;
     });
-    
     return Object.keys(categoryMap).map(category => ({
       name: category,
       value: categoryMap[category]
     }));
-  };
+  }, [data]);
 
-  const getRegionData = () => {
-    const regionData = [];
+  const getRegionData = useMemo(() => {
     const regionMap = {};
-    
     data.forEach(item => {
-      if (regionMap[item.region]) {
-        regionMap[item.region] += item.sales;
-      } else {
-        regionMap[item.region] = item.sales;
-      }
+      regionMap[item.region] = (regionMap[item.region] || 0) + item.sales;
     });
-    
-    return regionData;
-  };
+    return Object.keys(regionMap).map(region => ({
+      name: region,
+      value: regionMap[region]
+    }));
+  }, [data]);
 
-  // Apply filtering
   let filteredData = data;
-  
+
   if (activeFilter !== 'all') {
     if (activeFilter === 'highSales') {
       filteredData = data.filter(item => item.sales >= thresholdValue);
     } else if (activeFilter === 'lowSales') {
       filteredData = data.filter(item => item.sales < thresholdValue);
     } else if (activeFilter === 'lowInventory') {
-      filteredData = data.filter(item => item.inventory < 30);
+      filteredData = data.filter(item => item.inventory < 30);  // Leaving the low inventory filter intact
     }
   }
-  
+
   if (searchTerm) {
     filteredData = filteredData.filter(item => 
       item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -165,7 +191,7 @@ const SalesDashboard = () => {
       item.region.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
-  
+
   if (sortConfig.key) {
     filteredData.sort((a, b) => {
       if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -182,7 +208,6 @@ const SalesDashboard = () => {
     <div className="sales-dashboard">
       <h1>Sales Dashboard</h1>
       <div className='content-section'>
-     
         <div className="search-bar">
           <input 
             type="text" 
@@ -193,103 +218,45 @@ const SalesDashboard = () => {
         </div>
         
         <div className="filter-controls">
-          <button 
-            className={activeFilter === 'all' ? 'active' : ''} 
-            onClick={() => handleFilterChange('all')}
-          >
-            All Data
-          </button>
-          <button 
-            className={activeFilter === 'highSales' ? 'active' : ''} 
-            onClick={() => handleFilterChange('highSales')}
-          >
-            High Sales
-          </button>
-          <button 
-            className={activeFilter === 'lowSales' ? 'active' : ''} 
-            onClick={() => handleFilterChange('lowSales')}
-          >
-            Low Sales
-          </button>
-          <button 
-            className={activeFilter === 'lowInventory' ? 'active' : ''} 
-            onClick={() => handleFilterChange('lowInventory')}
-          >
-            Low Inventory
-          </button>
-          
+          <button className={activeFilter === 'all' ? 'active' : ''} onClick={() => handleFilterChange('all')}>All Data</button>
+          <button className={activeFilter === 'highSales' ? 'active' : ''} onClick={() => handleFilterChange('highSales')}>High Sales</button>
+          <button className={activeFilter === 'lowSales' ? 'active' : ''} onClick={() => handleFilterChange('lowSales')}>Low Sales</button>
+          <button className={activeFilter === 'lowInventory' ? 'active' : ''} onClick={() => handleFilterChange('lowInventory')}>Low Inventory</button>
           <label>
             Threshold: 
-            <input 
-              type="number" 
-              value={thresholdValue} 
-              onChange={handleThresholdChange}
-              min="0"
-            />
+            <input type="number" value={thresholdValue} onChange={handleThresholdChange} min="0" />
           </label>
         </div>
       </div>
-      
+
       <form onSubmit={handleSubmit} className="data-form">
         <h2>{editingId ? 'Edit Entry' : 'Add New Entry'}</h2>
-        
         <div className="form-row">
           <div className="form-group">
             <label>Product</label>
-            <input 
-              type="text" 
-              name="product" 
-              value={formData.product} 
-              onChange={handleChange} 
-              required
-            />
+            <input type="text" name="product" value={formData.product} onChange={handleChange} required />
           </div>
-          
           <div className="form-group">
             <label>Date</label>
-            <input 
-              type="date" 
-              name="date" 
-              value={formData.date} 
-              onChange={handleChange} 
-              required
-            />
+            <input type="date" name="date" value={formData.date} onChange={handleChange} required />
           </div>
         </div>
         
         <div className="form-row">
           <div className="form-group">
             <label>Sales ($)</label>
-            <input 
-              type="number" 
-              name="sales" 
-              value={formData.sales} 
-              onChange={handleChange} 
-              required
-            />
+            <input type="number" name="sales" value={formData.sales} onChange={handleChange} required />
           </div>
-          
           <div className="form-group">
             <label>Inventory</label>
-            <input 
-              type="number" 
-              name="inventory" 
-              value={formData.inventory} 
-              onChange={handleChange} 
-              required
-            />
+            <input type="number" name="inventory" value={formData.inventory} onChange={handleChange} required />
           </div>
         </div>
         
         <div className="form-row">
           <div className="form-group">
             <label>Category</label>
-            <select 
-              name="category" 
-              value={formData.category} 
-              onChange={handleChange} 
-              required
-            >
+            <select name="category" value={formData.category} onChange={handleChange} required>
               <option value="">Select a Category</option>
               <option value="Electronics">Electronics</option>
               <option value="Furniture">Furniture</option>
@@ -298,15 +265,9 @@ const SalesDashboard = () => {
               <option value="Books">Books</option>
             </select>
           </div>
-          
           <div className="form-group">
             <label>Region</label>
-            <select 
-              name="region" 
-              value={formData.region} 
-              onChange={handleChange} 
-              required
-            >
+            <select name="region" value={formData.region} onChange={handleChange} required>
               <option value="">Select a Region</option>
               <option value="North">North</option>
               <option value="South">South</option>
@@ -334,37 +295,23 @@ const SalesDashboard = () => {
         )}
       </form>
 
-      {/* Data Table */}
       <div className="data-table-container">
         <h2>Sales Data</h2>
         <table className="data-table">
           <thead>
             <tr>
-              <th onClick={() => requestSort('product')}>
-                Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('date')}>
-                Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('sales')}>
-                Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('inventory')}>
-                Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('category')}>
-                Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
-              <th onClick={() => requestSort('region')}>
-                Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              </th>
+              <th onClick={() => requestSort('product')}>Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+              <th onClick={() => requestSort('date')}>Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+              <th onClick={() => requestSort('sales')}>Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+              <th onClick={() => requestSort('inventory')}>Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+              <th onClick={() => requestSort('category')}>Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
+              <th onClick={() => requestSort('region')}>Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            
-            {filteredData.map((entry, index) => (
-              <tr key={index} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
+            {filteredData.map(entry => (
+              <tr key={entry.id} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
                 <td>{entry.product}</td>
                 <td>{entry.date}</td>
                 <td>{entry.sales}</td>
@@ -373,8 +320,7 @@ const SalesDashboard = () => {
                 <td>{entry.region}</td>
                 <td>
                   <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
-          
-                  <button className="delete-btn" onClick={() => deleteEntry(index)}>Delete</button>
+                  <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -386,7 +332,7 @@ const SalesDashboard = () => {
         <h2>Data Visualization</h2>
         
         <div className="chart-container">
-          <h3>Daily Sales Trend</h3>
+          <h3>Sales Trend Over Time</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={lineData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -400,9 +346,37 @@ const SalesDashboard = () => {
         </div>
         
         <div className="chart-container">
+          <h3>Top Selling Products</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={getTopSellingProducts}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="product" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="totalSales" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-container">
+          <h3>Product Performance Analysis (Average Sales)</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={getProductPerformanceAnalysis}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="product" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="averageSales" fill="#FFBB28" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="chart-container">
           <h3>Sales by Category</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getCategoryData()}>
+            <BarChart data={getCategoryData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -412,21 +386,13 @@ const SalesDashboard = () => {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        
+
         <div className="chart-container">
           <h3>Sales by Region</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
-              <Pie
-                data={getRegionData()}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {data.map((entry, index) => (
+              <Pie data={getRegionData} cx="50%" cy="50%" outerRadius={100} fill="#8884d8" dataKey="value" label>
+                {getRegionData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -436,7 +402,6 @@ const SalesDashboard = () => {
           </ResponsiveContainer>
         </div>
       </div>
-  
     </div>
   );
 };
