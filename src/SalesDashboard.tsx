@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useState,  } from 'react';
+import { FormEvent } from "react";
+import { ChangeEvent } from "react";
 import SummaryStats from './components/SummaryStats.tsx';
 import DownloadFile from './components/DownloadFile.tsx';
 import RegionPieChart from './components/RegionPieChart.tsx';
 import CategorySalesBarGraph from './components/CategorySalesBarGraph.tsx';
 import LineMonthlySales from './components/LineMonthlySales.tsx';
 import LineDailySales from './components/LineDailySales.tsx';
+
+interface SalesData {
+  id: number;
+  product: string;
+  date: string;
+  sales: number;
+  inventory: number;
+  category: string;
+  region: string;
+}
 
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-10-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
@@ -29,9 +41,9 @@ const SalesDashboard = () => {
     category: '',
     region: ''
   });
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: string }>({ key: null, direction: 'ascending' });
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
 
@@ -41,7 +53,7 @@ const SalesDashboard = () => {
   };
   
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     const salesValue = Number(formData.sales);
@@ -75,7 +87,7 @@ const SalesDashboard = () => {
     });
   };
 
-  const handleEdit = (item) => {
+  const handleEdit = (item: SalesData) => {
     setFormData({
       product: item.product,
       date: item.date,
@@ -87,26 +99,26 @@ const SalesDashboard = () => {
     setEditingId(item.id);
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterChange = (filter) => {
+  const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
   };
 
-  const handleThresholdChange = (e) => {
+  const handleThresholdChange = (e: ChangeEvent<HTMLInputElement>) => {
     setThresholdValue(Number(e.target.value));
   };
 
-  const requestSort = (key) => {
+  const requestSort = (key: string) => {
     let direction = 'ascending';
     
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -137,24 +149,28 @@ const SalesDashboard = () => {
     );
   }
   
-  if (sortConfig.key) {
+  if (sortConfig.key !== null) {
+    const key = sortConfig.key as keyof typeof filteredData[number]; // Ensure it's a valid key
+  
     filteredData.sort((a, b) => {
-      let aValue = a[sortConfig.key];
-      let bValue = b[sortConfig.key];
-    
-      if (!isNaN(aValue) && !isNaN(bValue)) {
+      let aValue = a[key];
+      let bValue = b[key];
+  
+      if (typeof aValue === "number" && typeof bValue === "number") {
         aValue = Number(aValue);
         bValue = Number(bValue);
       }
-    
+  
       if (aValue < bValue) {
-        return sortConfig.direction === 'ascending' ? -1 : 1;
+        return sortConfig.direction === "ascending" ? -1 : 1;
       }
       if (aValue > bValue) {
-        return sortConfig.direction === 'ascending' ? 1 : -1;
+        return sortConfig.direction === "ascending" ? 1 : -1;
       }
       return 0;
     });
+  
+  
     
   }
 
