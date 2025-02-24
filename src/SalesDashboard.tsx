@@ -294,27 +294,6 @@ const SalesDashboard: React.FC = () => {
         handleCancel={handleCancel}
       />
       
-      <SalesTable 
-        data={finalTableData} 
-        sortConfig={sortConfig} 
-        requestSort={(key) => {}}
-        deleteEntry={deleteEntry}
-        handleEdit={handleEdit}
-        thresholdValue={thresholdValue}
-      />
-      
-      <SummarySection 
-        totalSales={totalSales}
-        averageSales={averageSales}
-        bestSellingProduct={bestSellingProduct}
-        bestRegion={bestRegion}
-        salesPerformance={salesPerformance}
-      />
-      
-      <div className="export-buttons">
-        <button onClick={handleExportCSV}>Export CSV</button>
-      </div>
-      
       <AdvancedFilters
         startDate={startDate} 
         setStartDate={setStartDate}
@@ -329,6 +308,27 @@ const SalesDashboard: React.FC = () => {
         applyFilters={applyFilters} // Apply filters when button is clicked
         resetFilters={resetFilters}
       />
+
+      <SalesTable 
+        data={finalTableData} 
+        sortConfig={sortConfig} 
+        requestSort={(key) => {}}
+        deleteEntry={deleteEntry}
+        handleEdit={handleEdit}
+        thresholdValue={thresholdValue}
+      />
+ 
+      <SummarySection 
+        totalSales={totalSales}
+        averageSales={averageSales}
+        bestSellingProduct={bestSellingProduct}
+        bestRegion={bestRegion}
+        salesPerformance={salesPerformance}
+      />
+      
+      <div className="export-buttons">
+        <button onClick={handleExportCSV}>Export CSV</button>
+      </div>
       
       <ChartsSection 
         regionData={regionData}

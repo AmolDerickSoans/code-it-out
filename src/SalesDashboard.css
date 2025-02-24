@@ -448,3 +448,95 @@ html, body {
   font-weight: bold;
   color: #111 !important; /* Ensure text is visible */
 }
+/* Summary Section */
+.summary-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 20px;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+/* Each Summary Item (Card Style) */
+.summary-item {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 220px;
+  text-align: center;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+/* Hover effect for better UI */
+.summary-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Headings for summary items */
+.summary-item h3 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: bold;
+}
+
+/* Data values (Total Sales, Avg Sales, etc.) */
+.summary-item p {
+  font-size: 22px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Best Region Section */
+.performance-change {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Sales Performance Title */
+#salesper {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #000;
+}
+
+/* Performance Indicator */
+.performance-indicator {
+  font-size: 18px;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 5px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Sales Increase - Green */
+.performance-indicator.increase {
+  background-color: #d4edda;
+  color: #155724;
+  border: 2px solid #c3e6cb;
+}
+
+/* Sales Decrease - Red */
+.performance-indicator.decrease {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 2px solid #f5c6cb;
+}
+
+/* No Change - Blue */
+.performance-indicator.no-change {
+  background-color: #cce5ff;
+  color: #004085;
+  border: 2px solid #b8daff;
+}
