@@ -92,6 +92,18 @@ const SalesDashboard: React.FC = () => {
     setPreviousPeriodSales(totalSales);
   }, [totalSales]);
 
+  const getDailyTrendData = (): { date: string; sales: number }[] => {
+    const dateMap: { [key: string]: number } = {};
+    data.forEach(item => {
+      const date = item.date;  // Use the date as is, assuming it's in a valid format like 'YYYY-MM-DD'
+      dateMap[date] = (dateMap[date] || 0) + item.sales;
+    });
+    const trendData = Object.keys(dateMap).map(date => ({ date, sales: dateMap[date] }));
+    trendData.sort((a, b) => a.date.localeCompare(b.date));  // Sort by date
+    return trendData;
+  };
+  
+
   let basicFilteredData = data;
   if (activeFilter !== 'all') {
     if (activeFilter === 'highSales') {
@@ -265,8 +277,8 @@ const SalesDashboard: React.FC = () => {
     
 
   return (
-    <div className="sales-dashboard">
-      <h1>Sales Dashboard</h1>
+  <div className="sales-dashboard">
+`   <h1 className="enhanced-headline">Sales Dashboard</h1>
       <FilterControls 
         searchTerm={searchTerm} 
         handleSearch={(e) => setSearchTerm(e.target.value)}
@@ -323,11 +335,13 @@ const SalesDashboard: React.FC = () => {
       <ChartsSection 
         regionData={regionData}
         stackedBarData={getStackedBarData()}
-        monthlyTrendData={getMonthlyTrendData()}
+        dailyTrendData={getDailyTrendData()}
+        monthlyTrendData={getMonthlyTrendData()}  // Add the daily trend data here
         allRegions={allRegions}
         COLORS={COLORS}
       />
-    </div>
+
+  </div>
   );
 };
 

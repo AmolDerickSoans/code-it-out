@@ -1,22 +1,22 @@
-// ChartsSection.tsx
 import React from 'react';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { RegionData } from './SalesDashboard';
-
 
 type Props = {
   regionData: RegionData[];
   stackedBarData: { category: string; [region: string]: number | string }[];
   monthlyTrendData: { month: string; sales: number }[];
+  dailyTrendData: { date: string; sales: number }[];  // Added daily trend data prop
   allRegions: string[];
   COLORS: string[];
 };
 
-const ChartsSection: React.FC<Props> = ({ regionData, stackedBarData, monthlyTrendData, allRegions, COLORS }) => {
+const ChartsSection: React.FC<Props> = ({ regionData, stackedBarData, monthlyTrendData, dailyTrendData, allRegions, COLORS }) => {
   return (
     <div className="charts-section">
       <h2>Data Visualization Enhancements</h2>
 
+      {/* Sales by Region Pie Chart */}
       <div className="chart-container">
         <h3>Sales by Region</h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -32,6 +32,7 @@ const ChartsSection: React.FC<Props> = ({ regionData, stackedBarData, monthlyTre
         </ResponsiveContainer>
       </div>
 
+      {/* Category/Region Comparison Stacked Bar Chart */}
       <div className="chart-container">
         <h3>Category/Region Comparison</h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -48,6 +49,22 @@ const ChartsSection: React.FC<Props> = ({ regionData, stackedBarData, monthlyTre
         </ResponsiveContainer>
       </div>
 
+       {/* Daily Sales Trend Line Chart */}
+       <div className="chart-container">
+        <h3>Daily Sales Trend</h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={dailyTrendData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line type="monotone" dataKey="sales" stroke="#82ca9d" activeDot={{ r: 8 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Monthly Trend Line Chart */}
       <div className="chart-container">
         <h3>Monthly Trend Analysis</h3>
         <ResponsiveContainer width="100%" height={300}>
@@ -61,6 +78,8 @@ const ChartsSection: React.FC<Props> = ({ regionData, stackedBarData, monthlyTre
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+     
     </div>
   );
 };
