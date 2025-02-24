@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-
-import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, Cell
-} from 'recharts';
 import SummaryStats from './components/SummaryStats.tsx';
 import DownloadFile from './components/DownloadFile.tsx';
 import RegionPieChart from './components/RegionPieChart.tsx';
 import CategorySalesBarGraph from './components/CategorySalesBarGraph.tsx';
 import LineMonthlySales from './components/LineMonthlySales.tsx';
 import LineDailySales from './components/LineDailySales.tsx';
+import ErrorBoundary from './components/ErrorBoundary';
 
 
 const initialData = [
