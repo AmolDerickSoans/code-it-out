@@ -138,116 +138,122 @@ const SalesDashboard: React.FC = () => {
     return matchesDate && matchesCategory && matchesRegion;
   });
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSelectedCategories(prev =>
-      prev.includes(value) ? prev.filter(c => c !== value) : [...prev, value]
-    );
-  };
-
-  const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSelectedRegions(prev =>
-      prev.includes(value) ? prev.filter(r => r !== value) : [...prev, value]
-    );
-  };
-
-  const computeRegionSalesData = (): RegionData[] => {
-    const regionMap: { [key: string]: number } = {};
-    data.forEach(item => {
-      regionMap[item.region] = (regionMap[item.region] || 0) + item.sales;
-    });
-    return Object.keys(regionMap).map(region => ({ region, sales: regionMap[region] }));
-  };
-
-  const getStackedBarData = (): { category: string; [region: string]: number | string }[] => {
-    const result: { category: string; [region: string]: number | string }[] = [];
-    allCategories.forEach(category => {
-      const row: any = { category };
-      allRegions.forEach(region => {
-        row[region] = data
-          .filter(item => item.category === category && item.region === region)
-          .reduce((sum, item) => sum + item.sales, 0);
-      });
-      result.push(row);
-    });
-    return result;
-  };
-
-  const getMonthlyTrendData = (): { month: string; sales: number }[] => {
-    const monthMap: { [key: string]: number } = {};
-    data.forEach(item => {
-      const dateObj = new Date(item.date);
-      const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-      monthMap[monthYear] = (monthMap[monthYear] || 0) + item.sales;
-    });
-    const trendData = Object.keys(monthMap).map(month => ({ month, sales: monthMap[month] }));
-    trendData.sort((a, b) => a.month.localeCompare(b.month));
-    return trendData;
-  };
-
-  const regionData = computeRegionSalesData();
-  // const stackedBarData = getStackedBarData();
-  // const monthlyTrendData = getMonthlyTrendData();
-
-  const deleteEntry = (id: number) => setData(data.filter(item => item.id !== id));
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const salesValue = Number(formData.sales);
-    const inventoryValue = Number(formData.inventory);
-    if (editingId) {
-      setData(data.map(item => item.id === editingId ? { ...formData, sales: salesValue, inventory: inventoryValue, id: editingId } : item));
-      setEditingId(null);
-    } else {
-      const newId = data.length ? Math.max(...data.map(item => item.id)) + 1 : 1;
-      setData([...data, { ...formData, sales: salesValue, inventory: inventoryValue, id: newId }]);
-    }
-    setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
-  };
-  const handleEdit = (item: SalesData) => {
-    setFormData({ product: item.product, date: item.date, sales: item.sales.toString(), inventory: item.inventory.toString(), category: item.category, region: item.region });
-    setEditingId(item.id);
-  };
-  const handleCancel = () => {
-    setEditingId(null);
-    setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
-  };
-
-  type SortKey = 'product' | 'date' | 'sales' | 'inventory' | 'category' | 'region' | null;
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
-    key: null,
-    direction: 'ascending'
-  });
-
-  const handleExportCSV = () => {
-    const formatDate = (date: string | Date): string => {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${month}/${day}/${dateObj.getFullYear()}`;
+    const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setSelectedCategories(prev =>
+        prev.includes(value) ? prev.filter(c => c !== value) : [...prev, value]
+      );
     };
-    // Export using finalTableData
-    const exportData = finalTableData.map(item => ({
-      product: item.product,
-      date: formatDate(item.date),
-      sales: item.sales,
-      inventory: item.inventory,
-      category: item.category,
-      region: item.region,
-    }));
-    const headers = Object.keys(exportData[0]).join(',');
-    const rows = exportData.map(row => Object.values(row).join(',')).join('\n');
-    const csv = `${headers}\n${rows}`;
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'sales_data.csv';
-    link.click();
-  };
+
+    const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      setSelectedRegions(prev =>
+        prev.includes(value) ? prev.filter(r => r !== value) : [...prev, value]
+      );
+    };
+
+    const computeRegionSalesData = (): RegionData[] => {
+      const regionMap: { [key: string]: number } = {};
+      data.forEach(item => {
+        regionMap[item.region] = (regionMap[item.region] || 0) + item.sales;
+      });
+      return Object.keys(regionMap).map(region => ({ region, sales: regionMap[region] }));
+    };
+
+    const getStackedBarData = (): { category: string; [region: string]: number | string }[] => {
+      const result: { category: string; [region: string]: number | string }[] = [];
+      allCategories.forEach(category => {
+        const row: any = { category };
+        allRegions.forEach(region => {
+          row[region] = data
+            .filter(item => item.category === category && item.region === region)
+            .reduce((sum, item) => sum + item.sales, 0);
+        });
+        result.push(row);
+      });
+      return result;
+    };
+
+    const getMonthlyTrendData = (): { month: string; sales: number }[] => {
+      const monthMap: { [key: string]: number } = {};
+      data.forEach(item => {
+        const dateObj = new Date(item.date);
+        const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+        monthMap[monthYear] = (monthMap[monthYear] || 0) + item.sales;
+      });
+      const trendData = Object.keys(monthMap).map(month => ({ month, sales: monthMap[month] }));
+      trendData.sort((a, b) => a.month.localeCompare(b.month));
+      return trendData;
+    };
+
+    const regionData = computeRegionSalesData();
+
+    const deleteEntry = (id: number) => setData(data.filter(item => item.id !== id));
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setFormData({ ...formData, [name]: value });
+    };
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const salesValue = Number(formData.sales);
+      const inventoryValue = Number(formData.inventory);
+      if (editingId) {
+        setData(data.map(item => item.id === editingId ? { ...formData, sales: salesValue, inventory: inventoryValue, id: editingId } : item));
+        setEditingId(null);
+      } else {
+        const newId = data.length ? Math.max(...data.map(item => item.id)) + 1 : 1;
+        setData([...data, { ...formData, sales: salesValue, inventory: inventoryValue, id: newId }]);
+      }
+      setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
+    };  
+    const handleEdit = (item: SalesData) => {
+      setFormData({ product: item.product, date: item.date, sales: item.sales.toString(), inventory: item.inventory.toString(), category: item.category, region: item.region });
+      setEditingId(item.id);
+    };
+    const handleCancel = () => {
+      setEditingId(null);
+      setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
+    };
+
+    type SortKey = 'product' | 'date' | 'sales' | 'inventory' | 'category' | 'region' | null;
+    const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
+      key: null,
+      direction: 'ascending'
+    });
+       
+    const handleExportCSV = () => {
+      const formatDate = (date: string | Date): string => {
+        const dateObj = typeof date === 'string' ? new Date(date) : date;
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');  
+        const day = String(dateObj.getDate()).padStart(2, '0');  
+        const year = dateObj.getFullYear();  
+        return `${month}/${day}/${year}`; 
+      };
+    
+      const exportData = finalTableData.map(item => ({
+        product: item.product,
+        date: formatDate(item.date),  
+        sales: item.sales,
+        inventory: item.inventory,
+        category: item.category,
+        region: item.region,
+      }));
+    
+      const headers = Object.keys(exportData[0]).join(',');
+      const rows = exportData.map(row => 
+        Object.values(row).map(value => `"${value}"`).join(',')
+      ).join('\n');
+      
+      const csv = `${headers}\n${rows}`;
+    
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sales_data.csv';
+      link.click();
+    };
+  
+
   const applyFilters = () => {
     const filtered = data.filter(item => {
       const matchesDate = (startDate && endDate)
@@ -336,7 +342,7 @@ const SalesDashboard: React.FC = () => {
         regionData={regionData}
         stackedBarData={getStackedBarData()}
         dailyTrendData={getDailyTrendData()}
-        monthlyTrendData={getMonthlyTrendData()}  // Add the daily trend data here
+        monthlyTrendData={getMonthlyTrendData()}  
         allRegions={allRegions}
         COLORS={COLORS}
       />
