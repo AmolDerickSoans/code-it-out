@@ -1,4 +1,3 @@
-import React from "react";
 import {
   LineChart,
   Line,
@@ -10,7 +9,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export default function LineDailySales({ data = [] }) {
+type SalesData = {
+  sales: number;
+};
+
+type LineDailySalesProps = {
+  data?: SalesData[];
+};
+
+export default function LineDailySales({ data = [] }: LineDailySalesProps) {
   // Ensure `data` is valid before mapping
   const lineData = data.map((entry, index) => ({
     name: `Day ${index + 1}`,

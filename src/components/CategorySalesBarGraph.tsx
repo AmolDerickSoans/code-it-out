@@ -9,8 +9,15 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const getRegionColor = (region) => {
-  const colorMap = {
+// Define the type for each data item
+type SalesData = {
+  category: string;
+  region: string;
+  sales: number;
+};
+
+const getRegionColor = (region: string) => {
+  const colorMap: Record<string, string> = {
     North: "#8884d8",
     South: "#82ca9d",
     East: "#ffc658",
@@ -19,7 +26,11 @@ const getRegionColor = (region) => {
   return colorMap[region] || "#ccc";
 };
 
-const CategorySalesBarGraph = ({ data = [] }) => {
+type Props = {
+  data: SalesData[];
+};
+
+const CategorySalesBarGraph: React.FC<Props> = ({ data = [] }) => {
   // Get unique regions
   const regions = useMemo(() => {
     return Array.from(new Set(data.map((item) => item.region)));
@@ -27,7 +38,7 @@ const CategorySalesBarGraph = ({ data = [] }) => {
 
   // Memoize category-region sales aggregation
   const categoryRegionData = useMemo(() => {
-    const categoryMap = {};
+    const categoryMap: Record<string, Record<string, number>> = {};
 
     data.forEach((item) => {
       if (!categoryMap[item.category]) {
@@ -38,7 +49,7 @@ const CategorySalesBarGraph = ({ data = [] }) => {
     });
 
     return Object.keys(categoryMap).map((category) => {
-      const categoryEntry = { name: category };
+      const categoryEntry: Record<string, string | number> = { name: category };
       Object.keys(categoryMap[category]).forEach((region) => {
         categoryEntry[region] = categoryMap[category][region];
       });

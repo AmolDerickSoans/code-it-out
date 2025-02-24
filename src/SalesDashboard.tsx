@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import SummaryStats from './components/SummaryStats.tsx';
 import DownloadFile from './components/DownloadFile.tsx';
 import RegionPieChart from './components/RegionPieChart.tsx';
 import CategorySalesBarGraph from './components/CategorySalesBarGraph.tsx';
 import LineMonthlySales from './components/LineMonthlySales.tsx';
 import LineDailySales from './components/LineDailySales.tsx';
-import ErrorBoundary from './components/ErrorBoundary';
-
 
 const initialData = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-10-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
@@ -22,7 +20,7 @@ const initialData = [
 
 const SalesDashboard = () => {
   const [data, setData] = useState(initialData);
-  const [prevData, setPrevData] = useState(initialData);
+  const prevData = initialData;
   const [formData, setFormData] = useState({
     product: '',
     date: '',

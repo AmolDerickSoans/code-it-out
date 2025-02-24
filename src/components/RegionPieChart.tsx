@@ -43,7 +43,7 @@ const RegionPieChart: React.FC<RegionPieChartProps> = ({ data = [] }) => {
             dataKey="value"
             label
           >
-            {regionData.map((entry, index) => (
+            {regionData.map((_, index) => ( // Removed 'entry' since it's unused
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

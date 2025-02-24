@@ -8,7 +8,17 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const LineMonthlySales = ({ data = [] }) => {
+// Define the expected shape of each data object
+type SalesData = {
+  date: string;
+  sales: number;
+};
+
+type LineMonthlySalesProps = {
+  data?: SalesData[];
+};
+
+const LineMonthlySales: React.FC<LineMonthlySalesProps> = ({ data = [] }) => {
   // Memoize the computed data to avoid unnecessary recalculations
   const trendData = useMemo(() => {
     if (!data || data.length === 0) return [];

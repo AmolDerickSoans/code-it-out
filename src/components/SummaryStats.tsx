@@ -1,31 +1,42 @@
-import { useState, useEffect } from "react";
-import "./SummaryStats.css"; // Import the CSS file for styling
+import "./SummaryStats.css";
 
-const SummaryStats = ({ data, prevData }) => {
+type SalesData = {
+  product: string;
+  sales: number;
+};
+
+type SummaryStatsProps = {
+  data: SalesData[];
+  prevData?: SalesData[];
+};
+
+const SummaryStats: React.FC<SummaryStatsProps> = ({ data, prevData }) => {
   if (!data || data.length === 0) {
     return <p>No data available.</p>;
   }
 
-  const totalSales = data.reduce((sum, item) => sum + item.sales, 0);
-  const averageSales = (totalSales / data.length).toFixed(2);
-  const bestSellingProduct = data.reduce((max, item) =>
-    item.sales > max.sales ? item : max,
+  const totalSales: number = data.reduce((sum, item) => sum + item.sales, 0);
+  const averageSales: number = parseFloat((totalSales / data.length).toFixed(2));
+  const bestSellingProduct: SalesData = data.reduce(
+    (max, item) => (item.sales > max.sales ? item : max),
     data[0]
   );
 
-  // Calculate previous period metrics for comparison
-  const prevTotalSales = prevData?.reduce((sum, item) => sum + item.sales, 0) || 0;
-  const prevAverageSales = prevData?.length ? (prevTotalSales / prevData.length).toFixed(2) : 0;
+  // Previous period metrics
+  const prevTotalSales: number = prevData?.reduce((sum, item) => sum + item.sales, 0) || 0;
+  const prevAverageSales: number = prevData?.length
+    ? parseFloat((prevTotalSales / prevData.length).toFixed(2))
+    : 0;
 
   // Helper function for percentage change
-  const getPercentageChange = (current, previous) => {
+  const getPercentageChange = (current: number, previous: number): string => {
     if (previous === 0) return "∞"; // Prevent division by zero
     return (((current - previous) / previous) * 100).toFixed(2);
   };
 
   // Calculate performance changes
-  const totalSalesChange = getPercentageChange(totalSales, prevTotalSales);
-  const avgSalesChange = getPercentageChange(averageSales, prevAverageSales);
+  const totalSalesChange = parseFloat(getPercentageChange(totalSales, prevTotalSales));
+  const avgSalesChange = parseFloat(getPercentageChange(averageSales, prevAverageSales));
 
   return (
     <div className="summary-container">
