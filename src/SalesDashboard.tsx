@@ -175,8 +175,8 @@ const SalesDashboard: React.FC = () => {
   };
 
   const regionData = computeRegionSalesData();
-  const stackedBarData = getStackedBarData();
-  const monthlyTrendData = getMonthlyTrendData();
+  // const stackedBarData = getStackedBarData();
+  // const monthlyTrendData = getMonthlyTrendData();
 
   const deleteEntry = (id: number) => setData(data.filter(item => item.id !== id));
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
