@@ -269,8 +269,8 @@ html, body {
       flex: 1 1 100%;
     }
   }
-/* Container for Advanced Filters */
-.advanced-filters {
+
+  .advanced-filters {
   background-color: #f8f9fa;
   padding: 20px;
   border-radius: 10px;
@@ -279,15 +279,13 @@ html, body {
   margin: 20px auto;
 }
 
-/* Main Heading */
 .advanced-filters h2 {
   text-align: center;
   font-size: 22px;
   margin-bottom: 15px;
-  color: #111 !important; /* Ensure heading text is visible */
+  color: #111 !important;
 }
 
-/* Container for filters */
 .filters-container {
   display: flex;
   flex-wrap: wrap;
@@ -295,7 +293,6 @@ html, body {
   justify-content: space-between;
 }
 
-/* Individual filter sections */
 .filter-group {
   background: white;
   padding: 15px;
@@ -305,11 +302,10 @@ html, body {
   min-width: 250px;
 }
 
-/* Sub-headings for each filter section */
 .filter-group h3 {
   font-size: 18px;
   margin-bottom: 10px;
-  color: #000 !important; /* Ensure sub-heading is visible */
+  color: #000 !important; 
   font-weight: bold;
   background: #f1f1f1;
   padding: 5px;
@@ -317,49 +313,43 @@ html, body {
   text-align: center;
 }
 
-/* 📌 Fix for Date Input Fields */
 .date-filters {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 10px;
-  background: #fff; /* White background for better visibility */
+  background: #fff; 
   border-radius: 5px;
 }
 
-/* Labels for Start Date and End Date */
 .date-filters label {
   font-size: 14px;
   font-weight: bold;
-  color: #111 !important; /* Ensure label text is visible */
+  color: #111 !important; 
 }
 
-/* Date input fields */
 .date-filters input {
   width: 100%;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 14px;
-  background: #fff; /* Ensure input is visible */
-  color: #000 !important; /* Ensure text inside the input is visible */
+  background: #fff; 
+  color: #000 !important; 
 }
 
-/* Fix focus effect */
 .date-filters input:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
-/* Ensure categories and regions are visible */
 .checkbox-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* Ensure category and region labels are visible */
 .checkbox-item {
   display: flex;
   align-items: center;
@@ -371,20 +361,18 @@ html, body {
   cursor: pointer;
   border: 1px solid #ddd;
   font-weight: bold;
-  color: #111 !important; /* Ensure text is visible */
+  color: #111 !important; 
 }
 
-/* Hover effect for better visibility */
 .checkbox-item:hover {
   background: #f0f0f0;
 }
 
-/* Fix for checkbox inputs */
 .checkbox-item input {
   margin-right: 10px;
 }
 
-/* Buttons */
+
 .filter-buttons {
   display: flex;
   justify-content: center;
@@ -416,7 +404,6 @@ html, body {
   background: #c82333;
 }
 
-/* Applied Filters Section */
 .filter-summary {
   margin-top: 20px;
   padding: 15px;
@@ -424,7 +411,6 @@ html, body {
   border-radius: 8px;
 }
 
-/* Applied Filters Heading */
 .filter-summary h3 {
   font-size: 18px;
   margin-bottom: 10px;
@@ -432,13 +418,11 @@ html, body {
   font-weight: bold;
 }
 
-/* Applied Filters List */
 .filter-summary ul {
   list-style: none;
   padding: 0;
 }
 
-/* Individual applied filter items */
 .filter-summary li {
   background: #fff;
   padding: 8px;
@@ -446,9 +430,9 @@ html, body {
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   font-weight: bold;
-  color: #111 !important; /* Ensure text is visible */
+  color: #111 !important; 
 }
-/* Summary Section */
+
 .summary-section {
   display: flex;
   flex-wrap: wrap;
@@ -463,7 +447,6 @@ html, body {
   text-align: center;
 }
 
-/* Each Summary Item (Card Style) */
 .summary-item {
   background: white;
   padding: 15px;
@@ -474,13 +457,11 @@ html, body {
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
-/* Hover effect for better UI */
 .summary-item:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Headings for summary items */
 .summary-item h3 {
   font-size: 18px;
   margin-bottom: 10px;
@@ -488,21 +469,18 @@ html, body {
   font-weight: bold;
 }
 
-/* Data values (Total Sales, Avg Sales, etc.) */
 .summary-item p {
   font-size: 22px;
   font-weight: bold;
   color: #007bff;
 }
 
-/* Best Region Section */
 .performance-change {
   width: 100%;
   text-align: center;
   margin-top: 10px;
 }
 
-/* Sales Performance Title */
 #salesper {
   font-size: 20px;
   font-weight: bold;
@@ -510,7 +488,6 @@ html, body {
   color: #000;
 }
 
-/* Performance Indicator */
 .performance-indicator {
   font-size: 18px;
   font-weight: bold;
@@ -520,21 +497,18 @@ html, body {
   text-align: center;
 }
 
-/* Sales Increase - Green */
 .performance-indicator.increase {
   background-color: #d4edda;
   color: #155724;
   border: 2px solid #c3e6cb;
 }
 
-/* Sales Decrease - Red */
 .performance-indicator.decrease {
   background-color: #f8d7da;
   color: #721c24;
   border: 2px solid #f5c6cb;
 }
 
-/* No Change - Blue */
 .performance-indicator.no-change {
   background-color: #cce5ff;
   color: #004085;

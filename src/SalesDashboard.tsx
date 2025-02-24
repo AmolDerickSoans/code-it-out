@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import SalesForm from './SalesForm';
 import SalesTable from './SalesTable';
 import FilterControls from './FilterControls';
-import AdvancedFilters from './AdvancedFilter'; // Make sure the file name matches!
+import AdvancedFilters from './AdvancedFilter'; 
 import SummarySection from './SummarySection';
 import ChartsSection from './ChartsSection';
 import './SalesDashboard.css';
 
-// Types
+
 export type SalesData = {
   id: number;
   product: string;
@@ -32,7 +32,6 @@ export type RegionData = {
   sales: number;
 };
 
-// Initial Data
 const initialData: SalesData[] = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
   { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
@@ -49,7 +48,6 @@ export const allRegions = ["North", "South", "East", "West"];
 export const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const SalesDashboard: React.FC = () => {
-  // Global state
   const [data, setData] = useState<SalesData[]>(initialData);
   const [formData, setFormData] = useState<FormData>({
     product: '',
@@ -64,14 +62,12 @@ const SalesDashboard: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
 
-  // Advanced Filters state
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(data);
 
-  // Summary state
   const totalSales = data.reduce((acc, curr) => acc + curr.sales, 0);
   const averageSales = data.length ? totalSales / data.length : 0;
   const bestSellingProduct = data.reduce((max, curr) => (curr.sales > max.sales ? curr : max), data[0]);
@@ -96,7 +92,6 @@ const SalesDashboard: React.FC = () => {
     setPreviousPeriodSales(totalSales);
   }, [totalSales]);
 
-  // Basic filters (activeFilter and searchTerm)
   let basicFilteredData = data;
   if (activeFilter !== 'all') {
     if (activeFilter === 'highSales') {
@@ -115,9 +110,7 @@ const SalesDashboard: React.FC = () => {
     );
   }
 
-  // Compute final table data as intersection of basic and advanced filters
   const finalTableData = basicFilteredData.filter(item => {
-    // If no advanced filters are applied, return true.
     if (!startDate && !endDate && selectedCategories.length === 0 && selectedRegions.length === 0) {
       return true;
     }
@@ -133,7 +126,6 @@ const SalesDashboard: React.FC = () => {
     return matchesDate && matchesCategory && matchesRegion;
   });
 
-  // Handlers for advanced filter changes
   const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSelectedCategories(prev =>
@@ -148,7 +140,6 @@ const SalesDashboard: React.FC = () => {
     );
   };
 
-  // Data visualization helpers
   const computeRegionSalesData = (): RegionData[] => {
     const regionMap: { [key: string]: number } = {};
     data.forEach(item => {
@@ -187,7 +178,6 @@ const SalesDashboard: React.FC = () => {
   const stackedBarData = getStackedBarData();
   const monthlyTrendData = getMonthlyTrendData();
 
-  // Handlers for form actions
   const deleteEntry = (id: number) => setData(data.filter(item => item.id !== id));
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -305,7 +295,7 @@ const SalesDashboard: React.FC = () => {
         handleRegionChange={handleRegionChange}
         allCategories={allCategories}
         allRegions={allRegions}
-        applyFilters={applyFilters} // Apply filters when button is clicked
+        applyFilters={applyFilters} 
         resetFilters={resetFilters}
       />
 
