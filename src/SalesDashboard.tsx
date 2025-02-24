@@ -69,6 +69,7 @@ const SalesDashboard: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(data);
 
   // Summary state
   const totalSales = data.reduce((acc, curr) => acc + curr.sales, 0);
@@ -245,6 +246,33 @@ const SalesDashboard: React.FC = () => {
     link.download = 'sales_data.csv';
     link.click();
   };
+  const applyFilters = () => {
+    const filtered = data.filter(item => {
+      const matchesDate = (startDate && endDate)
+        ? new Date(item.date) >= new Date(startDate) && new Date(item.date) <= new Date(endDate)
+        : true;
+  
+      const matchesCategory = selectedCategories.length
+        ? selectedCategories.includes(item.category)
+        : true;
+  
+      const matchesRegion = selectedRegions.length
+        ? selectedRegions.includes(item.region)
+        : true;
+  
+      return matchesDate && matchesCategory && matchesRegion;
+    });
+  
+    setFilteredSalesData(filtered);
+  };
+  const resetFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setSelectedCategories([]);
+    setSelectedRegions([]);
+    setFilteredSalesData(data);
+  };
+    
 
   return (
     <div className="sales-dashboard">
@@ -287,7 +315,7 @@ const SalesDashboard: React.FC = () => {
         <button onClick={handleExportCSV}>Export CSV</button>
       </div>
       
-      <AdvancedFilters 
+      <AdvancedFilters
         startDate={startDate} 
         setStartDate={setStartDate}
         endDate={endDate}
@@ -298,6 +326,8 @@ const SalesDashboard: React.FC = () => {
         handleRegionChange={handleRegionChange}
         allCategories={allCategories}
         allRegions={allRegions}
+        applyFilters={applyFilters} // Apply filters when button is clicked
+        resetFilters={resetFilters}
       />
       
       <ChartsSection 
