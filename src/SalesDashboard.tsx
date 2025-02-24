@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, Cell
-} from 'recharts';
-import './SalesDashboard.css'
+import SalesForm from './SalesForm';
+import SalesTable from './SalesTable';
+import FilterControls from './FilterControls';
+import AdvancedFilters from './AdvancedFilter'; // Make sure the file name matches!
+import SummarySection from './SummarySection';
+import ChartsSection from './ChartsSection';
+import './SalesDashboard.css';
 
-type SalesData = {
+// Types
+export type SalesData = {
   id: number;
   product: string;
   date: string;
@@ -16,7 +18,7 @@ type SalesData = {
   region: string;
 };
 
-type FormData = {
+export type FormData = {
   product: string;
   date: string;
   sales: string;
@@ -25,16 +27,12 @@ type FormData = {
   region: string;
 };
 
-interface DataItem {
-  product: string;
-  date: string;
-  sales: number;
-  inventory: number;
-  category: string;
+export type RegionData = {
   region: string;
-  id: number;
-}
+  sales: number;
+};
 
+// Initial Data
 const initialData: SalesData[] = [
   { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
   { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
@@ -46,19 +44,12 @@ const initialData: SalesData[] = [
   { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
 ];
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
+export const allCategories = ["Electronics", "Furniture", "Appliances", "Clothing", "Books"];
+export const allRegions = ["North", "South", "East", "West"];
+export const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
-type SortKey = 'product' | 'date' | 'sales' | 'inventory' | 'category' | 'region' | null;
-
-const allCategories = ["Electronics", "Furniture", "Appliances", "Clothing", "Books"];
-const allRegions = ["North", "South", "East", "West"];
-
-type RegionData = {
-  region: string;
-  sales: number;
-};
-
-const SalesDashboard = () => {
+const SalesDashboard: React.FC = () => {
+  // Global state
   const [data, setData] = useState<SalesData[]>(initialData);
   const [formData, setFormData] = useState<FormData>({
     product: '',
@@ -70,163 +61,99 @@ const SalesDashboard = () => {
   });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: SortKey, direction: 'ascending' | 'descending'}>({key: null, direction: 'ascending'});
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+
+  // Advanced Filters state
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
-  const [filteredSalesData, setFilteredSalesData] = useState<SalesData[]>(data);
 
-  const handleDateRangeChange = () => {
-    setFilteredSalesData(
-      data.filter(item => {
-        const itemDate = new Date(item.date);
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        return itemDate >= start && itemDate <= end;
-      })
-    );}
-
-    const handleCategoryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value;
-      setSelectedCategories(prevState =>
-        prevState.includes(value)
-          ? prevState.filter(category => category !== value)
-          : [...prevState, value]
-      );
-    };
-  
-    const handleRegionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const value = event.target.value;
-      setSelectedRegions(prevState =>
-        prevState.includes(value)
-          ? prevState.filter(region => region !== value)
-          : [...prevState, value]
-      );
-    };
-  
-    const applyFilters = () => {
-
-      if (!startDate && !endDate && selectedCategories.length === 0 && selectedRegions.length === 0) {
-        setFilteredSalesData([]);
-        return;
-      }
-
-      const filtered = data.filter(item => {
-        const matchesDate = (startDate && endDate)
-          ? new Date(item.date) >= new Date(startDate) && new Date(item.date) <= new Date(endDate)
-          : true;
-
-        const matchesCategory = selectedCategories.length
-          ? selectedCategories.includes(item.category)
-          : true;
-  
-        const matchesRegion = selectedRegions.length
-          ? selectedRegions.includes(item.region)
-          : true;
-  
-        return matchesDate && matchesCategory && matchesRegion;
-      });
-  
-      setFilteredSalesData(filtered);
-    };
-   
-    useEffect(() => {
-      applyFilters();
-    }, [data, startDate, endDate, selectedCategories, selectedRegions]);    
-
-  const getRegionData = () => {
-    const regionMap: { [key: string]: number } = {};
-    const regionData: RegionData[] = [];
-    
-    data.forEach(item => {
-      if (regionMap[item.region]) {
-        regionMap[item.region] += item.sales;
-      } else {
-        regionMap[item.region] = item.sales;               
-      }
-    });      
-    Object.keys(regionMap).forEach(region => {
-      regionData.push({
-        region,
-        sales: regionMap[region],
-      })
-    })  
-    return regionData;
-  };
-
+  // Summary state
   const totalSales = data.reduce((acc, curr) => acc + curr.sales, 0);
   const averageSales = data.length ? totalSales / data.length : 0;
   const bestSellingProduct = data.reduce((max, curr) => (curr.sales > max.sales ? curr : max), data[0]);
+  const getRegionData = () => {
+    const regionMap: { [key: string]: number } = {};
+    data.forEach(item => {
+      regionMap[item.region] = (regionMap[item.region] || 0) + item.sales;
+    });
+    return Object.keys(regionMap).map(region => ({ region, sales: regionMap[region] }));
+  };
   const bestRegion = getRegionData().reduce((max, curr) => (curr.sales > max.sales ? curr : max), getRegionData()[0]);
+
   const [previousPeriodSales, setPreviousPeriodSales] = useState<number | null>(null);
   const [salesPerformance, setSalesPerformance] = useState<'increase' | 'decrease' | 'no-change'>('no-change');
 
   useEffect(() => {
     if (previousPeriodSales !== null) {
-      if (totalSales > previousPeriodSales) {
-        setSalesPerformance('increase');
-      } else if (totalSales < previousPeriodSales) {
-        setSalesPerformance('decrease');
-      } else {
-        setSalesPerformance('no-change');
-      }
+      if (totalSales > previousPeriodSales) setSalesPerformance('increase');
+      else if (totalSales < previousPeriodSales) setSalesPerformance('decrease');
+      else setSalesPerformance('no-change');
     }
-    setPreviousPeriodSales(totalSales); 
+    setPreviousPeriodSales(totalSales);
   }, [totalSales]);
 
-
-  const handleExportCSV = () => {
-    const formatDate = (date: string | Date ): string => {
-      let dateObj: Date
-      if (typeof date === 'string') {
-        dateObj = new Date(date);
-      } else if (date instanceof Date) {
-        dateObj = date;
-      } else {
-        return '';
-      }
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      const year = dateObj.getFullYear();
-      return `${month}/${day}/${year}`;
+  // Basic filters (activeFilter and searchTerm)
+  let basicFilteredData = data;
+  if (activeFilter !== 'all') {
+    if (activeFilter === 'highSales') {
+      basicFilteredData = data.filter(item => item.sales >= thresholdValue);
+    } else if (activeFilter === 'lowSales') {
+      basicFilteredData = data.filter(item => item.sales < thresholdValue);
+    } else if (activeFilter === 'lowInventory') {
+      basicFilteredData = data.filter(item => item.inventory < 30);
     }
-    const exportData = filteredData.map(item => ({
-      product: item.product,
-      date: formatDate(item.date),
-      sales: item.sales,
-      inventory: item.inventory,
-      category: item.category,
-      region: item.region,
-    }));
+  }
+  if (searchTerm) {
+    basicFilteredData = basicFilteredData.filter(item =>
+      item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.region.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
 
-    const headers = Object.keys(exportData[0]).join(',');
-    const rows = exportData.map(row => Object.values(row).join(',')).join('\n');
-    const csv = `${headers}\n${rows}`;
+  // Compute final table data as intersection of basic and advanced filters
+  const finalTableData = basicFilteredData.filter(item => {
+    // If no advanced filters are applied, return true.
+    if (!startDate && !endDate && selectedCategories.length === 0 && selectedRegions.length === 0) {
+      return true;
+    }
+    const matchesDate = (startDate && endDate)
+      ? new Date(item.date) >= new Date(startDate) && new Date(item.date) <= new Date(endDate)
+      : true;
+    const matchesCategory = selectedCategories.length
+      ? selectedCategories.includes(item.category)
+      : true;
+    const matchesRegion = selectedRegions.length
+      ? selectedRegions.includes(item.region)
+      : true;
+    return matchesDate && matchesCategory && matchesRegion;
+  });
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'sales_data.csv';
-    link.click();
+  // Handlers for advanced filter changes
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSelectedCategories(prev =>
+      prev.includes(value) ? prev.filter(c => c !== value) : [...prev, value]
+    );
   };
 
+  const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSelectedRegions(prev =>
+      prev.includes(value) ? prev.filter(r => r !== value) : [...prev, value]
+    );
+  };
+
+  // Data visualization helpers
   const computeRegionSalesData = (): RegionData[] => {
     const regionMap: { [key: string]: number } = {};
     data.forEach(item => {
-      if (regionMap[item.region]) {
-        regionMap[item.region] += item.sales;
-      } else {
-        regionMap[item.region] = item.sales;
-      }
+      regionMap[item.region] = (regionMap[item.region] || 0) + item.sales;
     });
-    const regionData: RegionData[] = [];
-    Object.keys(regionMap).forEach(region => {
-      regionData.push({ region, sales: regionMap[region] });
-    });
-    return regionData;
+    return Object.keys(regionMap).map(region => ({ region, sales: regionMap[region] }));
   };
 
   const getStackedBarData = (): { category: string; [region: string]: number | string }[] => {
@@ -248,11 +175,7 @@ const SalesDashboard = () => {
     data.forEach(item => {
       const dateObj = new Date(item.date);
       const monthYear = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-      if (monthMap[monthYear]) {
-        monthMap[monthYear] += item.sales;
-      } else {
-        monthMap[monthYear] = item.sales;
-      }
+      monthMap[monthYear] = (monthMap[monthYear] || 0) + item.sales;
     });
     const trendData = Object.keys(monthMap).map(month => ({ month, sales: monthMap[month] }));
     trendData.sort((a, b) => a.month.localeCompare(b.month));
@@ -263,504 +186,127 @@ const SalesDashboard = () => {
   const stackedBarData = getStackedBarData();
   const monthlyTrendData = getMonthlyTrendData();
 
-  const deleteEntry = (id: number) => {
-    const newData = data.filter((item) => item.id !== id);
-    setData(newData);
-  };
-  
+  // Handlers for form actions
+  const deleteEntry = (id: number) => setData(data.filter(item => item.id !== id));
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    setFormData({ ...formData, [name]: value });
   };
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
     const salesValue = Number(formData.sales);
     const inventoryValue = Number(formData.inventory);
-    
     if (editingId) {
-      const updatedData = data.map(item => 
-        item.id === editingId ? 
-        {...formData, sales: salesValue, inventory: inventoryValue, id: editingId} : 
-        item
-      );
-      setData(updatedData);
+      setData(data.map(item => item.id === editingId ? { ...formData, sales: salesValue, inventory: inventoryValue, id: editingId } : item));
       setEditingId(null);
     } else {
-      const newId = data.length > 0 ? Math.max(...data.map(item => item.id)) + 1 : 1;
-      setData([...data, {...formData, sales: salesValue, inventory: inventoryValue, id: newId}]);
+      const newId = data.length ? Math.max(...data.map(item => item.id)) + 1 : 1;
+      setData([...data, { ...formData, sales: salesValue, inventory: inventoryValue, id: newId }]);
     }
- 
-    setFormData({
-      product: '',
-      date: '',
-      sales: '',
-      inventory: '',
-      category: '',
-      region: ''
-    });
+    setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
   };
-
   const handleEdit = (item: SalesData) => {
-    setFormData({
-      product: item.product,
-      date: item.date,
-      sales: item.sales.toString(),
-      inventory: item.inventory.toString(),
-      category: item.category,
-      region: item.region
-    });
+    setFormData({ product: item.product, date: item.date, sales: item.sales.toString(), inventory: item.inventory.toString(), category: item.category, region: item.region });
     setEditingId(item.id);
   };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleCancel = () => {
+    setEditingId(null);
+    setFormData({ product: '', date: '', sales: '', inventory: '', category: '', region: '' });
   };
 
-  const handleFilterChange = (filter: 'all' | 'highSales' | 'lowSales' | 'lowInventory') => {
-    setActiveFilter(filter);
-  };
+  type SortKey = 'product' | 'date' | 'sales' | 'inventory' | 'category' | 'region' | null;
+  const [sortConfig, setSortConfig] = useState<{ key: SortKey; direction: 'ascending' | 'descending' }>({
+    key: null,
+    direction: 'ascending'
+  });
 
-  const handleThresholdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setThresholdValue(Number(e.target.value));
-  };
-
-  const requestSort = (key: SortKey) => {
-    let direction: 'ascending' | 'descending' = 'ascending';;
-    
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    
-    setSortConfig({ key, direction });
-  };
-
-  const lineData = data.map((entry, index) => ({
-    name: `Day ${index + 1}`,
-    value: entry.sales
-  }));
-
-  const getCategoryData = () => {
-    const categoryMap: { [key: string]: number} = {};
-    data.forEach(item => {
-      if (categoryMap[item.category]) {
-        categoryMap[item.category] += item.sales;
-      } else {
-        categoryMap[item.category] = item.sales;
-      }
-    });
-    
-    return Object.keys(categoryMap).map(category => ({
-      name: category,
-      value: categoryMap[category]
+  const handleExportCSV = () => {
+    const formatDate = (date: string | Date): string => {
+      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${month}/${day}/${dateObj.getFullYear()}`;
+    };
+    // Export using finalTableData
+    const exportData = finalTableData.map(item => ({
+      product: item.product,
+      date: formatDate(item.date),
+      sales: item.sales,
+      inventory: item.inventory,
+      category: item.category,
+      region: item.region,
     }));
+    const headers = Object.keys(exportData[0]).join(',');
+    const rows = exportData.map(row => Object.values(row).join(',')).join('\n');
+    const csv = `${headers}\n${rows}`;
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'sales_data.csv';
+    link.click();
   };
-
-  let filteredData = data;
-  
-  if (activeFilter !== 'all') {
-    if (activeFilter === 'highSales') {
-      filteredData = data.filter(item => item.sales >= thresholdValue);
-    } else if (activeFilter === 'lowSales') {
-      filteredData = data.filter(item => item.sales < thresholdValue);
-    } else if (activeFilter === 'lowInventory') {
-      filteredData = data.filter(item => item.inventory < 30);
-    }
-  }
-  
-  if (searchTerm) {
-    filteredData = filteredData.filter(item => 
-      item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.region.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }
-  
-  if (sortConfig.key) {
-    filteredData.sort((a, b) => {
-      const key = sortConfig.key as keyof typeof a;
-      if (a[key] < b[key]) {
-        return sortConfig.direction === 'ascending' ? -1 : 1;
-      }
-      if (a[key] > b[key]) {
-        return sortConfig.direction === 'ascending' ? 1 : -1;
-      }
-      return 0;
-    });
-  }
-
 
   return (
     <div className="sales-dashboard">
       <h1>Sales Dashboard</h1>
-      <div className='content-section'>
-     
-        <div className="search-bar">
-          <input 
-            type="text" 
-            placeholder="Search products, categories, regions..." 
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-        </div>
-        
-        <div className="filter-controls">
-          <button 
-            className={activeFilter === 'all' ? 'active' : ''} 
-            onClick={() => handleFilterChange('all')}
-          >
-            All Data
-          </button>
-          <button 
-            className={activeFilter === 'highSales' ? 'active' : ''} 
-            onClick={() => handleFilterChange('highSales')}
-          >
-            High Sales
-          </button>
-          <button 
-            className={activeFilter === 'lowSales' ? 'active' : ''} 
-            onClick={() => handleFilterChange('lowSales')}
-          >
-            Low Sales
-          </button>
-          <button 
-            className={activeFilter === 'lowInventory' ? 'active' : ''} 
-            onClick={() => handleFilterChange('lowInventory')}
-          >
-            Low Inventory
-          </button>
-          
-          <label>
-            Threshold: 
-            <input 
-              type="number" 
-              value={thresholdValue} 
-              onChange={handleThresholdChange}
-              min="0"
-            />
-          </label>
-        </div>
+      <FilterControls 
+        searchTerm={searchTerm} 
+        handleSearch={(e) => setSearchTerm(e.target.value)}
+        activeFilter={activeFilter}
+        handleFilterChange={setActiveFilter}
+        thresholdValue={thresholdValue}
+        handleThresholdChange={(e) => setThresholdValue(Number(e.target.value))}
+      />
+      
+      <SalesForm 
+        formData={formData}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        editingId={editingId}
+        handleCancel={handleCancel}
+      />
+      
+      <SalesTable 
+        data={finalTableData} 
+        sortConfig={sortConfig} 
+        requestSort={(key) => {}}
+        deleteEntry={deleteEntry}
+        handleEdit={handleEdit}
+        thresholdValue={thresholdValue}
+      />
+      
+      <SummarySection 
+        totalSales={totalSales}
+        averageSales={averageSales}
+        bestSellingProduct={bestSellingProduct}
+        bestRegion={bestRegion}
+        salesPerformance={salesPerformance}
+      />
+      
+      <div className="export-buttons">
+        <button onClick={handleExportCSV}>Export CSV</button>
       </div>
       
-      <form onSubmit={handleSubmit} className="data-form">
-      <h2>{editingId ? 'Edit Entry' : 'Add New Entry'}</h2>
+      <AdvancedFilters 
+        startDate={startDate} 
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        selectedCategories={selectedCategories}
+        handleCategoryChange={handleCategoryChange}
+        selectedRegions={selectedRegions}
+        handleRegionChange={handleRegionChange}
+        allCategories={allCategories}
+        allRegions={allRegions}
+      />
       
-      <div className="form-row">
-        <div className="form-group">
-          <label>Product</label>
-          <input 
-            type="text" 
-            name="product" 
-            value={formData.product} 
-            onChange={handleChange} 
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label>Date</label>
-          <input 
-            type="date" 
-            name="date" 
-            value={formData.date} 
-            onChange={handleChange} 
-            required
-          />
-        </div>
-      </div>
-      
-      <div className="form-row">
-        <div className="form-group">
-          <label>Sales ($)</label>
-          <input 
-            type="number" 
-            name="sales" 
-            value={formData.sales} 
-            onChange={handleChange} 
-            required
-          />
-        </div>
-        
-        <div className="form-group">
-          <label>Inventory</label>
-          <input 
-            type="number" 
-            name="inventory" 
-            value={formData.inventory} 
-            onChange={handleChange} 
-            required
-          />
-        </div>
-      </div>
-      
-      <div className="form-row">
-        <div className="form-group">
-          <label>Category</label>
-          <select 
-            name="category" 
-            value={formData.category} 
-            onChange={handleChange} 
-            required
-          >
-            <option value="">Select a Category</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Furniture">Furniture</option>
-            <option value="Appliances">Appliances</option>
-            <option value="Clothing">Clothing</option>
-            <option value="Books">Books</option>
-          </select>
-        </div>
-        
-        <div className="form-group">
-          <label>Region</label>
-          <select 
-            name="region" 
-            value={formData.region} 
-            onChange={handleChange} 
-            required
-          >
-            <option value="">Select a Region</option>
-            <option value="North">North</option>
-            <option value="South">South</option>
-            <option value="East">East</option>
-            <option value="West">West</option>
-          </select>
-        </div>
-      </div>
-      
-      <button type="submit">{editingId ? 'Update Entry' : 'Add Entry'}</button>
-      {editingId && (
-        <button type="button" onClick={() => {
-          setEditingId(null);
-          setFormData({
-            product: '',
-            date: '',
-            sales: '',
-            inventory: '',
-            category: '',
-            region: ''
-          });
-        }}>
-          Cancel
-        </button>
-      )}
-    </form>
-
-    <div className="data-table-container">
-      <h2>Sales Data</h2>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th onClick={() => requestSort('product')}>
-              Product {sortConfig.key === 'product' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
-            <th onClick={() => requestSort('date')}>
-              Date {sortConfig.key === 'date' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
-            <th onClick={() => requestSort('sales')}>
-              Sales ($) {sortConfig.key === 'sales' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
-            <th onClick={() => requestSort('inventory')}>
-              Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
-            <th onClick={() => requestSort('category')}>
-              Category {sortConfig.key === 'category' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
-            <th onClick={() => requestSort('region')}>
-              Region {sortConfig.key === 'region' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredData.map((entry, index) => (
-            <tr key={index} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
-              <td>{entry.product}</td>
-              <td>{entry.date}</td>
-              <td>{entry.sales}</td>
-              <td>{entry.inventory}</td>
-              <td>{entry.category}</td>
-              <td>{entry.region}</td>
-              <td>
-                <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
-        
-                <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
-
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    <div className="summary-section">
-      <div className="summary-item">
-        <h3>Total Sales</h3>
-        <p>${totalSales.toLocaleString()}</p>
-      </div>
-      <div className="summary-item">
-        <h3>Average Sales</h3>
-        <p>${averageSales.toFixed(2)}</p>
-      </div>
-      <div className="summary-item">
-        <h3>Best Selling Product</h3>
-        <p>{bestSellingProduct.product} (${bestSellingProduct.sales})</p>
-      </div>
-      <div className="summary-item">
-        <h3>Best Region</h3>
-        <p>{bestRegion.region} (${bestRegion.sales})</p>
-      </div>
-
-      <div className="performance-change">
-        <h3 id='salesper'>Sales Performance</h3>
-        <p className={`performance-indicator ${salesPerformance}`}>
-          {salesPerformance === 'increase' && '📈 Sales Increased'}
-          {salesPerformance === 'decrease' && '📉 Sales Decreased'}
-          {salesPerformance === 'no-change' && '📊 No Change'}
-        </p>
-      </div>
-    </div>
-    <div className="export-buttons">
-      <button onClick={handleExportCSV}>Export CSV</button>
-    </div>
-    <div className="filters">
-
-    <div className="filter-item">
-      <label>Start Date</label>
-      <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-      <label>End Date</label>
-      <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-      <button onClick={handleDateRangeChange}>Apply Date Range Filter</button>
-    </div>
-
-    <div className="filter-item">
-      <label>Categories</label>
-      {allCategories.map((category) => (
-        <div key={category}>
-          <input
-            type="checkbox"
-            value={category}
-            checked={selectedCategories.includes(category)}
-            onChange={handleCategoryChange}
-          />
-          <label>{category}</label>
-        </div>
-      ))}
-    </div>
-
-    <div className="filter-item">
-      <label>Regions</label>
-      {allRegions.map((region) => (
-        <div key={region}>
-          <input
-            type="checkbox"
-            value={region}
-            checked={selectedRegions.includes(region)}
-            onChange={handleRegionChange}
-          />
-          <label>{region}</label>
-        </div>
-      ))}
-    </div>
-  </div>
-
-  <div className="filter-summary">
-  <h4>Applied Filters:</h4>
-  <div>
-    {startDate && endDate && <p>Date Range: {startDate} to {endDate}</p>}
-    {selectedCategories.length > 0 && <p>Categories: {selectedCategories.join(', ')}</p>}
-    {selectedRegions.length > 0 && <p>Regions: {selectedRegions.join(', ')}</p>}
-  </div>
-  </div>
-
-      <div className="data-table-container">
-        <h2>Sales Data</h2>
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Date</th>
-              <th>Sales</th>
-              <th>Inventory</th>
-              <th>Category</th>
-              <th>Region</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSalesData.map((entry, index) => (
-              <tr key={index}>
-                <td>{entry.product}</td>
-                <td>{entry.date}</td>
-                <td>{entry.sales}</td>
-                <td>{entry.inventory}</td>
-                <td>{entry.category}</td>
-                <td>{entry.region}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-
-      <div className="charts-section">
-        <h2>Data Visualization Enhancements</h2>
-
-        <div className="chart-container">
-          <h3>Sales by Region</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={regionData}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                dataKey="sales"
-                label
-              >
-                {regionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-container">
-          <h3>Category/Region Comparison</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stackedBarData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              {allRegions.map((region, index) => (
-                <Bar key={region} dataKey={region} stackId="a" fill={COLORS[index % COLORS.length]} />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Monthly Trend Analysis</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlyTrendData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="sales" stroke="#8884d8" activeDot={{ r: 8 }} />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
+      <ChartsSection 
+        regionData={regionData}
+        stackedBarData={getStackedBarData()}
+        monthlyTrendData={getMonthlyTrendData()}
+        allRegions={allRegions}
+        COLORS={COLORS}
+      />
     </div>
   );
 };
