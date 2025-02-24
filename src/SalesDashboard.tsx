@@ -302,7 +302,7 @@ const SalesDashboard: React.FC = () => {
       <SalesTable 
         data={finalTableData} 
         sortConfig={sortConfig} 
-        requestSort={(key) => {}}
+        requestSort={() => {}}
         deleteEntry={deleteEntry}
         handleEdit={handleEdit}
         thresholdValue={thresholdValue}

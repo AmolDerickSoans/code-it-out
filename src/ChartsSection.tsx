@@ -22,7 +22,7 @@ const ChartsSection: React.FC<Props> = ({ regionData, stackedBarData, monthlyTre
         <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie data={regionData} cx="50%" cy="50%" outerRadius={100} dataKey="sales" label>
-              {regionData.map((entry, index) => (
+              {regionData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
