@@ -1,25 +1,38 @@
-import React, { useState } from 'react';
-import { 
-  LineChart, Line, BarChart, Bar, PieChart, Pie, 
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, Cell
-} from 'recharts';
+import { useState,  } from 'react';
+import { FormEvent } from "react";
+import { ChangeEvent } from "react";
+import SummaryStats from './components/SummaryStats.tsx';
+import DownloadFile from './components/DownloadFile.tsx';
+import RegionPieChart from './components/RegionPieChart.tsx';
+import CategorySalesBarGraph from './components/CategorySalesBarGraph.tsx';
+import LineMonthlySales from './components/LineMonthlySales.tsx';
+import LineDailySales from './components/LineDailySales.tsx';
+
+interface SalesData {
+  id: number;
+  product: string;
+  date: string;
+  sales: number;
+  inventory: number;
+  category: string;
+  region: string;
+}
 
 const initialData = [
-  { id: 1, product: "Laptop XZ-2000", date: "2024-01-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
-  { id: 2, product: "Smart Watch V3", date: "2024-01-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
-  { id: 3, product: "Ergonomic Chair", date: "2024-01-03", sales: 2100, inventory: 18, category: "Furniture", region: "West" },
+  { id: 1, product: "Laptop XZ-2000", date: "2024-10-01", sales: 1500, inventory: 32, category: "Electronics", region: "North" },
+  { id: 2, product: "Smart Watch V3", date: "2024-06-02", sales: 900, inventory: 45, category: "Electronics", region: "East" },
+  { id: 3, product: "Ergonomic Chair", date: "2024-11-03", sales: 2100, inventory: 18, category: "Furniture", region: "West" },
   { id: 4, product: "Wireless Earbuds", date: "2024-01-04", sales: 750, inventory: 55, category: "Electronics", region: "South" },
-  { id: 5, product: "Office Desk", date: "2024-01-05", sales: 1200, inventory: 24, category: "Furniture", region: "North" },
+  { id: 5, product: "Office Desk", date: "2024-02-05", sales: 1200, inventory: 24, category: "Furniture", region: "North" },
   { id: 6, product: "Coffee Maker", date: "2024-01-06", sales: 600, inventory: 38, category: "Appliances", region: "East" },
-  { id: 7, product: "Bluetooth Speaker", date: "2024-01-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
-  { id: 8, product: "Standing Desk", date: "2024-01-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
+  { id: 7, product: "Bluetooth Speaker", date: "2024-02-07", sales: 450, inventory: 62, category: "Electronics", region: "West" },
+  { id: 8, product: "Standing Desk", date: "2024-03-08", sales: 1800, inventory: 15, category: "Furniture", region: "South" },
 ];
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
 
 const SalesDashboard = () => {
   const [data, setData] = useState(initialData);
+  const prevData = initialData;
   const [formData, setFormData] = useState({
     product: '',
     date: '',
@@ -28,22 +41,28 @@ const SalesDashboard = () => {
     category: '',
     region: ''
   });
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: string }>({ key: null, direction: 'ascending' });
   const [activeFilter, setActiveFilter] = useState('all');
   const [thresholdValue, setThresholdValue] = useState(1000);
 
-  const deleteEntry = (index) => {
-    const newData = data.filter((_, i) => i !== index);
+  const deleteEntry = (id: number) => {
+    const newData = data.filter(item => item.id !== id);
     setData(newData);
   };
+  
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     const salesValue = Number(formData.sales);
     const inventoryValue = Number(formData.inventory);
+
+    if (isNaN(salesValue) || isNaN(inventoryValue) || salesValue < 0 || inventoryValue < 0) {
+      alert("Sales and Inventory must be valid positive numbers.");
+      return;
+    }
     
     if (editingId) {
       const updatedData = data.map(item => 
@@ -68,7 +87,7 @@ const SalesDashboard = () => {
     });
   };
 
-  const handleEdit = (item) => {
+  const handleEdit = (item: SalesData) => {
     setFormData({
       product: item.product,
       date: item.date,
@@ -80,26 +99,26 @@ const SalesDashboard = () => {
     setEditingId(item.id);
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleFilterChange = (filter) => {
+  const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
   };
 
-  const handleThresholdChange = (e) => {
+  const handleThresholdChange = (e: ChangeEvent<HTMLInputElement>) => {
     setThresholdValue(Number(e.target.value));
   };
 
-  const requestSort = (key) => {
+  const requestSort = (key: string) => {
     let direction = 'ascending';
     
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -107,42 +126,6 @@ const SalesDashboard = () => {
     }
     
     setSortConfig({ key, direction });
-  };
-
-  const lineData = data.map((entry, index) => ({
-    name: `Day ${index + 1}`,
-    value: entry.sales
-  }));
-
-  const getCategoryData = () => {
-    const categoryMap = {};
-    data.forEach(item => {
-      if (categoryMap[item.category]) {
-        categoryMap[item.category] += item.sales;
-      } else {
-        categoryMap[item.category] = item.sales;
-      }
-    });
-    
-    return Object.keys(categoryMap).map(category => ({
-      name: category,
-      value: categoryMap[category]
-    }));
-  };
-
-  const getRegionData = () => {
-    const regionData = [];
-    const regionMap = {};
-    
-    data.forEach(item => {
-      if (regionMap[item.region]) {
-        regionMap[item.region] += item.sales;
-      } else {
-        regionMap[item.region] = item.sales;
-      }
-    });
-    
-    return regionData;
   };
 
   // Apply filtering
@@ -166,17 +149,39 @@ const SalesDashboard = () => {
     );
   }
   
-  if (sortConfig.key) {
+  if (sortConfig.key !== null) {
+    const key = sortConfig.key as keyof typeof filteredData[number]; // Ensure it's a valid key
+  
     filteredData.sort((a, b) => {
-      if (a[sortConfig.key] < b[sortConfig.key]) {
-        return sortConfig.direction === 'ascending' ? -1 : 1;
+      let aValue = a[key];
+      let bValue = b[key];
+  
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        aValue = Number(aValue);
+        bValue = Number(bValue);
       }
-      if (a[sortConfig.key] > b[sortConfig.key]) {
-        return sortConfig.direction === 'ascending' ? 1 : -1;
+  
+      if (aValue < bValue) {
+        return sortConfig.direction === "ascending" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === "ascending" ? 1 : -1;
       }
       return 0;
     });
+  
+  
+    
   }
+
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [salesFilter, setSalesFilter] = useState<number>(0);
+
+  const sortedData = [...data].sort((a, b) =>
+    sortOrder === "asc" ? a.sales - b.sales : b.sales - a.sales
+  );
+  const filteredDataForDownload = sortedData.filter((item) => item.sales >= salesFilter);
+  
 
   return (
     <div className="sales-dashboard">
@@ -284,10 +289,10 @@ const SalesDashboard = () => {
         <div className="form-row">
           <div className="form-group">
             <label>Category</label>
-            <select 
-              name="category" 
-              value={formData.category} 
-              onChange={handleChange} 
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
               required
             >
               <option value="">Select a Category</option>
@@ -363,8 +368,8 @@ const SalesDashboard = () => {
           </thead>
           <tbody>
             
-            {filteredData.map((entry, index) => (
-              <tr key={index} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
+            {filteredData.map((entry) => (
+              <tr key={entry.id} className={entry.sales >= thresholdValue ? 'high-sales' : ''}>
                 <td>{entry.product}</td>
                 <td>{entry.date}</td>
                 <td>{entry.sales}</td>
@@ -373,8 +378,7 @@ const SalesDashboard = () => {
                 <td>{entry.region}</td>
                 <td>
                   <button className="edit-btn" onClick={() => handleEdit(entry)}>Edit</button>
-          
-                  <button className="delete-btn" onClick={() => deleteEntry(index)}>Delete</button>
+                  <button className="delete-btn" onClick={() => deleteEntry(entry.id)}>Delete</button>
                 </td>
               </tr>
             ))}
@@ -384,59 +388,38 @@ const SalesDashboard = () => {
       
       <div className="charts-section">
         <h2>Data Visualization</h2>
-        
-        <div className="chart-container">
-          <h3>Daily Sales Trend</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={lineData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="value" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Sales by Category</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={getCategoryData()}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        
-        <div className="chart-container">
-          <h3>Sales by Region</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={getRegionData()}
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <LineDailySales data={data} />
+        <LineMonthlySales data={data} />
+        <CategorySalesBarGraph data={data} />    
+        <RegionPieChart data={data} />
+
+        <div>
+      <SummaryStats data={data} prevData={prevData} />
+    </div>
+    
+    <div className="dashboard-container">
+      {/* Sorting Controls */}
+      <div className="controls" style={{color: 'black'}}>
+        <label>Sort by Sales: </label>
+        <select onChange={(e) => setSortOrder(e.target.value as "asc" | "desc")}>
+          <option value="desc">Highest to Lowest</option>
+          <option value="asc">Lowest to Highest</option>
+        </select>
+
+        {/* Filtering Controls */}
+        <label>Filter Sales Above: </label>
+        <input
+          type="number"
+          value={salesFilter}
+          onChange={(e) => setSalesFilter(Number(e.target.value))}
+        />
       </div>
-  
+
+      <DownloadFile filteredData={filteredDataForDownload} />
+    </div>
+    
+      </div>
+          
     </div>
   );
 };
